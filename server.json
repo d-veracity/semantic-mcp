@@ -1,0 +1,54 @@
+{
+  "$schema": "https://static.modelcontextprotocol.io/schemas/2025-12-11/server.schema.json",
+  "name": "com.dveracity/semantic-mcp",
+  "title": "dVeracity Semantic API",
+  "description": "Natural-language queries over a verified emissions knowledge graph, plus standards validation",
+  "version": "0.5.0",
+  "websiteUrl": "https://dveracity.com/semantic-api",
+  "packages": [
+    {
+      "registryType": "npm",
+      "identifier": "@dveracity/semantic-mcp",
+      "version": "0.5.0",
+      "transport": {
+        "type": "stdio"
+      },
+      "environmentVariables": [
+        {
+          "name": "DVERACITY_API_KEY",
+          "description": "dVeracity API key (dvrc_...). Required for the stdio package; metered calls are billed to it. Not used by the remote endpoint, which authenticates with OAuth.",
+          "isRequired": true,
+          "isSecret": true,
+          "format": "string"
+        },
+        {
+          "name": "DVERACITY_API_URL",
+          "description": "Optional. Override the API base URL; defaults to production.",
+          "isRequired": false,
+          "isSecret": false,
+          "format": "string"
+        },
+        {
+          "name": "DVERACITY_KERI_AID",
+          "description": "Optional. Agent AID enabling vLEI-verified identity mode.",
+          "isRequired": false,
+          "isSecret": false,
+          "format": "string"
+        },
+        {
+          "name": "DVERACITY_KERI_PRESENTATION",
+          "description": "Optional. Path to the CESR presentation used with the agent AID.",
+          "isRequired": false,
+          "isSecret": false,
+          "format": "filepath"
+        }
+      ]
+    }
+  ],
+  "remotes": [
+    {
+      "type": "streamable-http",
+      "url": "https://api.dveracity.com/mcp"
+    }
+  ]
+}

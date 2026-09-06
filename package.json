@@ -1,0 +1,56 @@
+{
+  "name": "@dveracity/semantic-mcp",
+  "version": "0.5.0",
+  "description": "MCP server exposing the dVeracity Semantic API and the Open Footprint canonical data model to AI agents",
+  "type": "module",
+  "main": "index.js",
+  "bin": {
+    "dveracity-semantic-mcp": "index.js"
+  },
+  "scripts": {
+    "start": "node index.js",
+    "test": "node --test test/"
+  },
+  "keywords": [
+    "mcp",
+    "model-context-protocol",
+    "dveracity",
+    "emissions",
+    "knowledge-graph",
+    "open-footprint",
+    "sustainability",
+    "vlei",
+    "carbon",
+    "csrd",
+    "data-model",
+    "ontology",
+    "pact",
+    "esrs"
+  ],
+  "license": "Apache-2.0",
+  "engines": {
+    "node": ">=18"
+  },
+  "dependencies": {
+    "@modelcontextprotocol/sdk": "^1.0.0",
+    "zod": "^3.23.0"
+  },
+  "homepage": "https://dveracity.com/api/v1/semantic/manifest",
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/d-veracity/semantic-mcp.git"
+  },
+  "files": [
+    "index.js",
+    "lib/",
+    "README.md",
+    "LICENSE"
+  ],
+  "publishConfig": {
+    "access": "public"
+  },
+  "mcpName": "com.dveracity/semantic-mcp",
+  "bugs": {
+    "url": "https://github.com/d-veracity/semantic-mcp/issues"
+  }
+}
