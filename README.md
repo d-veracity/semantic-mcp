@@ -1,5 +1,7 @@
 # dVeracity Semantic MCP server
 
+[![smithery badge](https://smithery.ai/badge/ajvdvoort/dveracity)](https://smithery.ai/servers/ajvdvoort/dveracity)
+
 Gives any MCP-capable AI agent (Claude Code, Cursor, custom agents) metered access
 to the **dVeracity Semantic API** — natural-language queries over the
 verified-emissions knowledge graph (Open Footprint / PPDM / OGMP-methane) — and
@@ -123,3 +125,9 @@ stop, not retry.
 ## Test
 
 `npm test` (no network; the HTTP layer is stubbed).
+
+## Where it is listed
+
+- [Smithery](https://smithery.ai/servers/ajvdvoort/dveracity) — one-click add for Smithery toolbox users
+- [Official MCP Registry](https://registry.modelcontextprotocol.io/v0/servers?search=dveracity) — `com.dveracity/semantic-mcp`
+- [npm](https://www.npmjs.com/package/@dveracity/semantic-mcp) — `@dveracity/semantic-mcp`
