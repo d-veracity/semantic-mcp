@@ -1,6 +1,6 @@
 {
   "name": "@dveracity/semantic-mcp",
-  "version": "0.5.1",
+  "version": "0.5.2",
   "description": "MCP server exposing the dVeracity Semantic API and the Open Footprint canonical data model to AI agents",
   "type": "module",
   "main": "index.js",
