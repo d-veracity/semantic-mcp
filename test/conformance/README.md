@@ -212,6 +212,32 @@ run that reports E1 as undetected is behaving correctly.
 This is the distinction the suite exists to preserve: **a check that was not run is not the
 same as a check that passed**, and neither is a defect.
 
+## Accepted-red: parameter strictness (suite 04)
+
+`run_param_strictness.py` is a second, separate suite covering
+[semantic-mcp#11](https://github.com/d-veracity/semantic-mcp/issues/11). **All four
+cases fail at server 0.5.2 by design.** It encodes the agreed target behaviour, not
+observed behaviour, so it is non-gating until #11 ships — then pass `--gate`.
+
+| Case | At 0.5.2 |
+|---|---|
+| P1 — 7 tools declaring `additionalProperties: false` | 0/7 reject an unknown key |
+| P2 — 4 tools omitting the declaration | 0/4 reject an unknown key |
+| P3 — near-miss key must not silently change the answer | fail |
+| P4 — mistyped `sector` must not be misattributed | fail (1 credit, `--include-paid`) |
+
+P4 is the one worth understanding. Passing `sectorId` instead of `sector` to
+`ofp_validate` yields `policy.reason: "no_sector_supplied"` — a false statement about
+the caller's input. The server never falsely claims compliance (`policy.ran` stays
+`false` either way, correctly), but the recorded *reason* misattributes cause. That
+makes it a provenance defect rather than a validation defect.
+
+```
+python3 run_param_strictness.py                 # free, non-gating
+python3 run_param_strictness.py --include-paid  # adds P4, costs 1 credit
+python3 run_param_strictness.py --gate          # exits non-zero while red
+```
+
 ## Attributing a baseline
 
 A baseline is meaningless without knowing which build produced it. This suite
