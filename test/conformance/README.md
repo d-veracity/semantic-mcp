@@ -76,7 +76,7 @@ largely a **restructuring** of existing honest content into a machine-readable
 
 | Gap | Evidence |
 |---|---|
-| `value_range` | E1 negative quantity undetected; server notes the absent constraint itself |
+| `value_range` | E1 negative quantity undetected — **accepted-red by decision, not a defect.** See below. |
 | `temporal_consistency` | E3 inverted validity period undetected |
 | Format check on `Valid From Datetime` | E4 undetected while E5 (its partner) is caught — isolates the model asymmetry as sole cause |
 | `enum_membership` | E6 undetected — pattern conformance is checked, referent validity is not |
@@ -183,6 +183,34 @@ variance on the Cloud Run backend, not at validation cost.
 **Do not gate on this number.** The regression gate deliberately ignores
 latency. Treat it as a coarse trend only, and if a real latency budget is
 needed, measure server-side instead.
+
+## Accepted-red: E1
+
+**E1 is red on purpose and must not be treated as a regression or a defect.**
+
+Q2 was decided on 2026-09-07 ([semantic-mcp#2](https://github.com/d-veracity/semantic-mcp/issues/2)):
+removals are **positive quantities of a Sink**, per ISO 14064-1, which treats removals as a
+distinct inventory category rather than as a sign on emissions. No field permits negatives.
+
+But the sign of `Quantity` is a consequence of the linked activity's `Emission Inventory Type`
+(Source / Sink / Credit), and the path to it breaks:
+
+```
+Emission Statement
+  └─ Emission Activity ID            required: TRUE
+       └─ Emission Inventory Type ID  required: FALSE   ← breaks here
+```
+
+`ofp_validate` validates a single payload with no foreign-key resolution, so a range check
+shipped today would assert a conclusion it has not established. Phase 0 emits a **warning**
+instead of a violation.
+
+E1 goes green only after the upstream `openfootprint` change: `Emission Inventory Type ID`
+becomes required on `Emission Activity`, then `Quantity` gains `minimum: 0`. Until then, a
+run that reports E1 as undetected is behaving correctly.
+
+This is the distinction the suite exists to preserve: **a check that was not run is not the
+same as a check that passed**, and neither is a defect.
 
 ## Attributing a baseline
 

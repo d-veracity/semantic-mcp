@@ -701,12 +701,8 @@
       ]
     },
     "latency_ms": {
-      "n": 30,
-      "p50": 138.5,
-      "p90": 249.3,
-      "min": 24.4,
-      "max": 278.1,
-      "note": "Wall clock incl. network from the client, not server-side time. Treat as a regression signal, not an SLA."
+      "n": 0,
+      "skipped": true
     }
   },
   "server": {
