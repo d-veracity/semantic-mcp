@@ -1,0 +1,37 @@
+name: Unit tests
+
+# Why this job exists
+# -------------------
+# conformance.yml validates the DEPLOYED endpoint (api.dveracity.com/mcp), which
+# is a separate artifact: dve-backend mounts this package's registerTools at
+# POST /mcp, and it only updates after merge -> npm publish -> backend redeploy.
+# So on any pull request the conformance suite tests the PREVIOUSLY deployed
+# build and can never validate the code in the PR itself. For #11 (parameter
+# strictness) it reported P1 0/10 even with the fix on the branch, because the
+# live endpoint was still 0.5.3 -- CI green did not mean the fix was validated.
+#
+# This job runs the unit tests against the PR's own checkout, in-process, with no
+# network, no credits and no endpoint. That is what actually gates a change like
+# #11: test/tools.test.js proves strict rejection at the SDK layer. It also runs
+# the client / keri / ofp suites, which CI had never executed before.
+on:
+  pull_request:
+  push:
+    branches: [main]
+  workflow_dispatch:
+
+jobs:
+  test:
+    name: npm test (node 20)
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 20
+          # No `cache: npm` here: there is no package-lock.json, and setup-node's
+          # npm cache requires one (it fails with "Dependencies lock file is not
+          # found"). Same reason the install step below is `npm install`, not
+          # `npm ci` -- ci refuses to run without a lockfile.
+      - run: npm install --no-audit --no-fund
+      - run: npm test
