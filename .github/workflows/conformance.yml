@@ -44,12 +44,12 @@ jobs:
         run: |
           # Encodes the agreed target behaviour from #11, which has not shipped.
           # Deliberately NOT gating: remove --gate suppression once #11 lands.
-          # --include-paid only on the nightly run; it costs 1 credit.
-          if [ "${{ github.event_name }}" = "schedule" ]; then
-            python3 run_param_strictness.py --include-paid
-          else
-            python3 run_param_strictness.py
-          fi
+          # Covers the paid tools on every run by decision of 2026-09-07.
+          # Measured cost: 3 credits/run at 0.5.2 (semantic_query 1, ofp_validate
+          # 1 in P1, ofp_validate 1 in P4). validate_data is free. This should
+          # fall to 0 once #11 ships, since a rejected call should not be billed.
+          # Pass --no-paid to drop it back to free.
+          python3 run_param_strictness.py
 
       - name: Upload baseline
         if: always()

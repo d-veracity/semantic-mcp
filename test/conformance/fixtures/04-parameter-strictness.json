@@ -7,33 +7,122 @@
   "cases": [
     {
       "id": "P1",
-      "name": "declared strict — unknown key must be rejected",
+      "name": "declared strict \u2014 unknown key must be rejected",
       "kind": "unknown_arg_rejected",
-      "note": "additionalProperties:false is published for each of these. Enforcement is the fix.",
+      "note": "additionalProperties:false is published for each of these. Enforcement is the fix. Includes the paid tools by explicit decision (2026-09-07): coverage of the surfaces that matter most is worth the recurring cost. Note the cost is self-cancelling once #11 ships, because a rejected call should not reach billing.",
       "expect": "isError true, and the error message names the offending key",
       "tools": [
-        { "tool": "ofp_search_entities", "valid": { "q": "emission" } },
-        { "tool": "ofp_entity", "valid": { "name": "Emission Activity", "domain": "common-entities" } },
-        { "tool": "ofp_sectors", "valid": {} },
-        { "tool": "ofp_sector", "valid": { "id": "entertainment" } },
-        { "tool": "ofp_policies", "valid": { "id": "entertainment" } },
-        { "tool": "ofp_semantics", "valid": { "maxFieldCount": 5 } },
-        { "tool": "ofp_semantic_code", "valid": { "code": "ofp-sustainability:4.3~10_1" } }
+        {
+          "tool": "ofp_search_entities",
+          "valid": {
+            "q": "emission"
+          }
+        },
+        {
+          "tool": "ofp_entity",
+          "valid": {
+            "name": "Emission Activity",
+            "domain": "common-entities"
+          }
+        },
+        {
+          "tool": "ofp_sectors",
+          "valid": {}
+        },
+        {
+          "tool": "ofp_sector",
+          "valid": {
+            "id": "entertainment"
+          }
+        },
+        {
+          "tool": "ofp_policies",
+          "valid": {
+            "id": "entertainment"
+          }
+        },
+        {
+          "tool": "ofp_semantics",
+          "valid": {
+            "maxFieldCount": 5
+          }
+        },
+        {
+          "tool": "ofp_semantic_code",
+          "valid": {
+            "code": "ofp-sustainability:4.3~10_1"
+          }
+        },
+        {
+          "tool": "semantic_query",
+          "valid": {
+            "query": "emission statement"
+          },
+          "costs_credits": 1
+        },
+        {
+          "tool": "validate_data",
+          "valid": {
+            "standard": "ofp",
+            "data": {
+              "Emission Activity ID": "dveracity:master-data--EmissionActivity:X-001:1",
+              "Emission Component ID": "dveracity:reference-data--EmissionComponent:X-001:1",
+              "Emission Recording Method Type ID": "dveracity:reference-data--EmissionRecordingMethodType:X-001:1",
+              "Emission Statement ID": "dveracity:transactional-data--EmissionStatement:X-001:1",
+              "Name": "Venue electricity, September 2026",
+              "Unit Of Measure ID": "dveracity:reference-data--UnitOfMeasure:X-001:1",
+              "Valid From Datetime": "2026-09-01T00:00:00Z",
+              "Valid To Datetime": "2026-09-30T23:59:59Z"
+            }
+          },
+          "costs_credits": 0,
+          "note": "free at 0.5.2; verify credits_charged if pricing changes"
+        },
+        {
+          "tool": "ofp_validate",
+          "valid": {
+            "entity": "Emission Statement",
+            "domain": "common-entities",
+            "payload": {
+              "Emission Activity ID": "dveracity:master-data--EmissionActivity:X-001:1",
+              "Emission Component ID": "dveracity:reference-data--EmissionComponent:X-001:1",
+              "Emission Recording Method Type ID": "dveracity:reference-data--EmissionRecordingMethodType:X-001:1",
+              "Emission Statement ID": "dveracity:transactional-data--EmissionStatement:X-001:1",
+              "Name": "Venue electricity, September 2026",
+              "Unit Of Measure ID": "dveracity:reference-data--UnitOfMeasure:X-001:1",
+              "Valid From Datetime": "2026-09-01T00:00:00Z",
+              "Valid To Datetime": "2026-09-30T23:59:59Z"
+            }
+          },
+          "costs_credits": 1
+        }
       ],
       "junk_key": "__unexpected_param__"
     },
     {
       "id": "P2",
-      "name": "no declared strictness — contract should be uniform",
+      "name": "no declared strictness \u2014 contract should be uniform",
       "kind": "unknown_arg_rejected",
       "note": "These omit additionalProperties entirely. #11 item 2 sets it explicitly so the surface is uniform. Lower severity than P1: no published contract is being broken today, only inconsistency.",
       "expect": "isError true once additionalProperties:false is set",
       "severity": "minor",
       "tools": [
-        { "tool": "semantic_templates", "valid": {} },
-        { "tool": "list_standards", "valid": {} },
-        { "tool": "ofp_models", "valid": {} },
-        { "tool": "ofp_model_provenance", "valid": {} }
+        {
+          "tool": "semantic_templates",
+          "valid": {}
+        },
+        {
+          "tool": "list_standards",
+          "valid": {}
+        },
+        {
+          "tool": "ofp_models",
+          "valid": {}
+        },
+        {
+          "tool": "ofp_model_provenance",
+          "valid": {}
+        }
       ],
       "junk_key": "__unexpected_param__"
     },
@@ -41,10 +130,14 @@
       "id": "P3",
       "name": "near-miss key must not silently change the answer",
       "kind": "near_miss_not_silent",
-      "note": "The headline case. 'sequestration' is absent from the canonical model, so the correct answer is an empty result. With the parameter mistyped, the search degrades to an unfiltered listing and returns six unrelated entities — identical to passing no argument at all. The error INVERTS the answer rather than degrading it.",
+      "note": "The headline case. 'sequestration' is absent from the canonical model, so the correct answer is an empty result. With the parameter mistyped, the search degrades to an unfiltered listing and returns six unrelated entities \u2014 identical to passing no argument at all. The error INVERTS the answer rather than degrading it.",
       "tool": "ofp_search_entities",
-      "correct": { "q": "sequestration" },
-      "near_miss": { "query": "sequestration" },
+      "correct": {
+        "q": "sequestration"
+      },
+      "near_miss": {
+        "query": "sequestration"
+      },
       "control": {},
       "expect": "near_miss is rejected. Until then, assert at minimum that near_miss does NOT equal control, since equality proves the argument was discarded entirely.",
       "suggest": "Unknown parameter \"query\". Did you mean \"q\"?"
@@ -54,15 +147,23 @@
       "name": "mistyped sector must not be reported as no sector supplied",
       "kind": "no_misattribution",
       "costs_credits": 1,
-      "note": "Highest-consequence case, and distinct from the others. The server does NOT falsely claim compliance — policy.ran is false either way, which is correct and to its credit. But the REASON misattributes cause: a caller who supplies 'sectorId' instead of 'sector' is told 'No sector was named', which is a false statement about their own input. In an assurance chain that reason is recorded as evidence.",
+      "note": "Highest-consequence case, and distinct from the others. The server does NOT falsely claim compliance \u2014 policy.ran is false either way, which is correct and to its credit. But the REASON misattributes cause: a caller who supplies 'sectorId' instead of 'sector' is told 'No sector was named', which is a false statement about their own input. In an assurance chain that reason is recorded as evidence.",
       "tool": "ofp_validate",
       "correct_arg": "sector",
       "near_miss_arg": "sectorId",
       "value": "entertainment",
-      "observed_correct": { "ran": false, "reason": "no_policy_published", "sector": "entertainment" },
-      "observed_near_miss": { "ran": false, "reason": "no_sector_supplied" },
+      "observed_correct": {
+        "ran": false,
+        "reason": "no_policy_published",
+        "sector": "entertainment"
+      },
+      "observed_near_miss": {
+        "ran": false,
+        "reason": "no_sector_supplied"
+      },
       "expect": "Rejection of the unknown key. Failing that, the reason must not assert 'no_sector_supplied' when a sector-like key was in fact supplied.",
       "must_never": "reason == 'no_sector_supplied' when the caller passed a key within edit distance 2 of 'sector'"
     }
-  ]
+  ],
+  "cost_note": "Full run charges credits on every invocation while #11 is unfixed, because the unknown key is accepted and the tool executes. Once rejection lands, these calls should cost nothing. If a rejected call is still billed, that is a separate defect worth filing."
 }

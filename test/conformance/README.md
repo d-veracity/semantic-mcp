@@ -221,10 +221,10 @@ observed behaviour, so it is non-gating until #11 ships — then pass `--gate`.
 
 | Case | At 0.5.2 |
 |---|---|
-| P1 — 7 tools declaring `additionalProperties: false` | 0/7 reject an unknown key |
+| P1 — 10 tools declaring `additionalProperties: false` | 0/10 reject an unknown key |
 | P2 — 4 tools omitting the declaration | 0/4 reject an unknown key |
 | P3 — near-miss key must not silently change the answer | fail |
-| P4 — mistyped `sector` must not be misattributed | fail (1 credit, `--include-paid`) |
+| P4 — mistyped `sector` must not be misattributed | fail |
 
 P4 is the one worth understanding. Passing `sectorId` instead of `sector` to
 `ofp_validate` yields `policy.reason: "no_sector_supplied"` — a false statement about
@@ -233,10 +233,21 @@ the caller's input. The server never falsely claims compliance (`policy.ran` sta
 makes it a provenance defect rather than a validation defect.
 
 ```
-python3 run_param_strictness.py                 # free, non-gating
-python3 run_param_strictness.py --include-paid  # adds P4, costs 1 credit
-python3 run_param_strictness.py --gate          # exits non-zero while red
+python3 run_param_strictness.py            # full coverage, 3 credits, non-gating
+python3 run_param_strictness.py --no-paid  # free, drops semantic_query/ofp_validate
+python3 run_param_strictness.py --gate     # exits non-zero while red
 ```
+
+**Cost: 3 credits per run**, measured, not estimated — the runner brackets itself with
+`credits_balance` (free) and prints what it spent. `semantic_query` 1, `ofp_validate` 1
+in P1, `ofp_validate` 1 in P4; `validate_data` is free. Paid tools are included on
+every run by decision of 2026-09-07.
+
+This cost should fall to **zero** once #11 ships, because credits are only charged
+today by virtue of the bug: the unknown key is accepted, so the tool actually executes.
+A rejected call should never reach billing. **If the suite still spends credits after
+rejection lands, that is a separate defect and worth filing** — it would mean callers
+are billed for requests the server refused.
 
 ## Attributing a baseline
 

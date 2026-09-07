@@ -9,7 +9,12 @@ Expectations derive from each tool's own published inputSchema. Where a tool
 declares additionalProperties:false, rejecting unknown keys is the contract the
 server already advertises; this asserts nothing new.
 
-Free by default. Pass --include-paid to run P4, which costs 1 credit.
+Covers the paid tools on every run by explicit decision (2026-09-07). Pass
+--no-paid to skip them. Cost is reported at the end of each run.
+
+The cost should be self-cancelling once #11 ships: a rejected call ought not to
+reach billing. If credits are still charged after rejection lands, that is a
+separate defect worth filing.
 """
 import json
 import os
@@ -21,7 +26,7 @@ FIXTURE = os.path.join(HERE, "fixtures", "04-parameter-strictness.json")
 ENDPOINT = os.environ.get("DVERACITY_ENDPOINT", "https://api.dveracity.com/mcp")
 
 GATE = "--gate" in sys.argv
-INCLUDE_PAID = "--include-paid" in sys.argv
+INCLUDE_PAID = "--no-paid" not in sys.argv
 
 
 def _post(method, params):
@@ -49,6 +54,15 @@ def call(tool, args):
         return bool(res.get("isError")), text
 
 
+def credits_balance():
+    """credits_balance is itself free, so bracketing a run with it is honest."""
+    try:
+        _, b = call("credits_balance", {})
+        return b["data"]["balance"]
+    except Exception:
+        return None
+
+
 def entity_names(parsed):
     try:
         return [e["name"] for e in parsed["data"]["entities"]]
@@ -63,13 +77,19 @@ server = _post("initialize", {"protocolVersion": "2025-06-18", "capabilities": {
                               "clientInfo": {"name": "dve-conformance", "version": "1"}})
 info = server.get("result", {}).get("serverInfo")
 print(f"server under test: {info}")
-print(f"suite status     : {fx['status']}  ({fx['issue']})\n")
+print(f"suite status     : {fx['status']}  ({fx['issue']})")
+start_balance = credits_balance()
+print(f"credits before   : {start_balance}")
+print(f"paid tools       : {'included' if INCLUDE_PAID else 'skipped (--no-paid)'}\n")
 
 
 def run_rejection(case):
     """Unknown key supplied alongside valid required args must be rejected."""
     rows = []
     for t in case["tools"]:
+        if t.get("costs_credits") and not INCLUDE_PAID:
+            rows.append({"tool": t["tool"], "skipped": "paid", "pass": None})
+            continue
         args = dict(t["valid"])
         args[case["junk_key"]] = "xyzzy"
         is_err, body = call(t["tool"], args)
@@ -82,13 +102,16 @@ def run_rejection(case):
 for cid in ("P1", "P2"):
     c = cases[cid]
     rows = run_rejection(c)
-    npass = sum(r["pass"] for r in rows)
-    results[cid] = {"passed": npass, "total": len(rows), "rows": rows,
-                    "pass": npass == len(rows)}
+    ran = [r for r in rows if r["pass"] is not None]
+    npass = sum(r["pass"] for r in ran)
+    results[cid] = {"passed": npass, "total": len(ran), "rows": rows,
+                    "pass": bool(ran) and npass == len(ran)}
     print(f"{cid} {c['name']}")
-    print(f"   {npass}/{len(rows)} reject an unknown argument")
+    print(f"   {npass}/{len(ran)} reject an unknown argument")
     for r in rows:
-        if not r["pass"]:
+        if r["pass"] is None:
+            print(f"     skip  {r['tool']:<22} paid tool, --no-paid")
+        elif not r["pass"]:
             print(f"     MISS  {r['tool']:<22} accepted the unknown key")
     print()
 
@@ -125,11 +148,20 @@ if INCLUDE_PAID:
     print(f"   misattributes cause          : {misattributed}")
     print(f"   PASS: {not misattributed}\n")
 else:
-    results["P4"] = {"skipped": "costs 1 credit; pass --include-paid"}
-    print("P4 skipped (costs 1 credit; pass --include-paid)\n")
+    results["P4"] = {"skipped": "paid tool, --no-paid", "pass": None}
+    print("P4 skipped (paid tool, --no-paid)\n")
+
+end_balance = credits_balance()
+spent = (start_balance - end_balance) if None not in (start_balance, end_balance) else None
+print(f"credits: {start_balance} -> {end_balance}   spent this run: {spent}")
+if spent:
+    print("Expected to fall to 0 once #11 ships, since a rejected call should not")
+    print("reach billing. If it does not, that is a separate defect.")
 
 out = {"server": info, "suite": fx["suite"], "issue": fx["issue"],
-       "status": fx["status"], "results": results}
+       "status": fx["status"], "paid_tools_included": INCLUDE_PAID,
+       "credits": {"before": start_balance, "after": end_balance, "spent": spent},
+       "results": results}
 path = os.path.join(HERE, "baseline-param-strictness.json")
 json.dump(out, open(path, "w"), indent=2)
 print(f"wrote {path}")
