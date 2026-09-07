@@ -1,0 +1,68 @@
+{
+  "suite": "parameter-strictness",
+  "issue": "d-veracity/semantic-mcp#11",
+  "status": "accepted-red",
+  "accepted_red_reason": "Every case here fails at server 0.5.2 by design of the current implementation. The suite encodes the AGREED TARGET behaviour from #11, not observed behaviour. It must not gate CI until #11 ships; at that point flip gating to true and these become permanent regression controls.",
+  "model_basis": "Each tool's own published inputSchema from tools/list. Where a tool declares additionalProperties:false, rejecting unknown keys is the contract the server itself advertises. This suite asserts nothing that the server has not already claimed.",
+  "cases": [
+    {
+      "id": "P1",
+      "name": "declared strict — unknown key must be rejected",
+      "kind": "unknown_arg_rejected",
+      "note": "additionalProperties:false is published for each of these. Enforcement is the fix.",
+      "expect": "isError true, and the error message names the offending key",
+      "tools": [
+        { "tool": "ofp_search_entities", "valid": { "q": "emission" } },
+        { "tool": "ofp_entity", "valid": { "name": "Emission Activity", "domain": "common-entities" } },
+        { "tool": "ofp_sectors", "valid": {} },
+        { "tool": "ofp_sector", "valid": { "id": "entertainment" } },
+        { "tool": "ofp_policies", "valid": { "id": "entertainment" } },
+        { "tool": "ofp_semantics", "valid": { "maxFieldCount": 5 } },
+        { "tool": "ofp_semantic_code", "valid": { "code": "ofp-sustainability:4.3~10_1" } }
+      ],
+      "junk_key": "__unexpected_param__"
+    },
+    {
+      "id": "P2",
+      "name": "no declared strictness — contract should be uniform",
+      "kind": "unknown_arg_rejected",
+      "note": "These omit additionalProperties entirely. #11 item 2 sets it explicitly so the surface is uniform. Lower severity than P1: no published contract is being broken today, only inconsistency.",
+      "expect": "isError true once additionalProperties:false is set",
+      "severity": "minor",
+      "tools": [
+        { "tool": "semantic_templates", "valid": {} },
+        { "tool": "list_standards", "valid": {} },
+        { "tool": "ofp_models", "valid": {} },
+        { "tool": "ofp_model_provenance", "valid": {} }
+      ],
+      "junk_key": "__unexpected_param__"
+    },
+    {
+      "id": "P3",
+      "name": "near-miss key must not silently change the answer",
+      "kind": "near_miss_not_silent",
+      "note": "The headline case. 'sequestration' is absent from the canonical model, so the correct answer is an empty result. With the parameter mistyped, the search degrades to an unfiltered listing and returns six unrelated entities — identical to passing no argument at all. The error INVERTS the answer rather than degrading it.",
+      "tool": "ofp_search_entities",
+      "correct": { "q": "sequestration" },
+      "near_miss": { "query": "sequestration" },
+      "control": {},
+      "expect": "near_miss is rejected. Until then, assert at minimum that near_miss does NOT equal control, since equality proves the argument was discarded entirely.",
+      "suggest": "Unknown parameter \"query\". Did you mean \"q\"?"
+    },
+    {
+      "id": "P4",
+      "name": "mistyped sector must not be reported as no sector supplied",
+      "kind": "no_misattribution",
+      "costs_credits": 1,
+      "note": "Highest-consequence case, and distinct from the others. The server does NOT falsely claim compliance — policy.ran is false either way, which is correct and to its credit. But the REASON misattributes cause: a caller who supplies 'sectorId' instead of 'sector' is told 'No sector was named', which is a false statement about their own input. In an assurance chain that reason is recorded as evidence.",
+      "tool": "ofp_validate",
+      "correct_arg": "sector",
+      "near_miss_arg": "sectorId",
+      "value": "entertainment",
+      "observed_correct": { "ran": false, "reason": "no_policy_published", "sector": "entertainment" },
+      "observed_near_miss": { "ran": false, "reason": "no_sector_supplied" },
+      "expect": "Rejection of the unknown key. Failing that, the reason must not assert 'no_sector_supplied' when a sector-like key was in fact supplied.",
+      "must_never": "reason == 'no_sector_supplied' when the caller passed a key within edit distance 2 of 'sector'"
+    }
+  ]
+}

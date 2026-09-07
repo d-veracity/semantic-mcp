@@ -37,9 +37,25 @@ jobs:
             python3 run_fixtures.py --latency 30
           fi
 
+      - name: Parameter strictness (accepted-red, non-gating)
+        working-directory: test/conformance
+        env:
+          DVERACITY_API_KEY: ${{ secrets.DVERACITY_API_KEY }}
+        run: |
+          # Encodes the agreed target behaviour from #11, which has not shipped.
+          # Deliberately NOT gating: remove --gate suppression once #11 lands.
+          # --include-paid only on the nightly run; it costs 1 credit.
+          if [ "${{ github.event_name }}" = "schedule" ]; then
+            python3 run_param_strictness.py --include-paid
+          else
+            python3 run_param_strictness.py
+          fi
+
       - name: Upload baseline
         if: always()
         uses: actions/upload-artifact@v4
         with:
           name: conformance-baseline-${{ github.sha }}
-          path: test/conformance/baseline.json
+          path: |
+            test/conformance/baseline.json
+            test/conformance/baseline-param-strictness.json

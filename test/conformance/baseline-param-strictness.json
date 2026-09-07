@@ -1,0 +1,101 @@
+{
+  "server": {
+    "name": "dveracity-semantic",
+    "version": "0.5.2"
+  },
+  "suite": "parameter-strictness",
+  "issue": "d-veracity/semantic-mcp#11",
+  "status": "accepted-red",
+  "results": {
+    "P1": {
+      "passed": 0,
+      "total": 7,
+      "rows": [
+        {
+          "tool": "ofp_search_entities",
+          "rejected": false,
+          "names_key": false,
+          "pass": false
+        },
+        {
+          "tool": "ofp_entity",
+          "rejected": false,
+          "names_key": false,
+          "pass": false
+        },
+        {
+          "tool": "ofp_sectors",
+          "rejected": false,
+          "names_key": false,
+          "pass": false
+        },
+        {
+          "tool": "ofp_sector",
+          "rejected": false,
+          "names_key": false,
+          "pass": false
+        },
+        {
+          "tool": "ofp_policies",
+          "rejected": false,
+          "names_key": false,
+          "pass": false
+        },
+        {
+          "tool": "ofp_semantics",
+          "rejected": false,
+          "names_key": false,
+          "pass": false
+        },
+        {
+          "tool": "ofp_semantic_code",
+          "rejected": false,
+          "names_key": false,
+          "pass": false
+        }
+      ],
+      "pass": false
+    },
+    "P2": {
+      "passed": 0,
+      "total": 4,
+      "rows": [
+        {
+          "tool": "semantic_templates",
+          "rejected": false,
+          "names_key": false,
+          "pass": false
+        },
+        {
+          "tool": "list_standards",
+          "rejected": false,
+          "names_key": false,
+          "pass": false
+        },
+        {
+          "tool": "ofp_models",
+          "rejected": false,
+          "names_key": false,
+          "pass": false
+        },
+        {
+          "tool": "ofp_model_provenance",
+          "rejected": false,
+          "names_key": false,
+          "pass": false
+        }
+      ],
+      "pass": false
+    },
+    "P3": {
+      "rejected": false,
+      "silently_dropped": true,
+      "correct_n": 0,
+      "near_n": 100,
+      "pass": false
+    },
+    "P4": {
+      "skipped": "costs 1 credit; pass --include-paid"
+    }
+  }
+}
