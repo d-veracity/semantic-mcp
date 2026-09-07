@@ -1,0 +1,713 @@
+{
+  "endpoint": "https://api.dveracity.com/mcp",
+  "results": {
+    "semantic_error_probe": {
+      "cases": 9,
+      "detected": 2,
+      "detectable": 7,
+      "negative_tests_pass": 2,
+      "negative_tests": 2,
+      "detail": [
+        {
+          "id": "E1",
+          "ac": "AC-3.1",
+          "name": "negative quantity",
+          "expect": "value_range",
+          "found": [],
+          "pass": false,
+          "control": false,
+          "negative": false
+        },
+        {
+          "id": "E2",
+          "ac": "AC-1.5b",
+          "name": "invalid unit, canonical key",
+          "expect": "pattern_mismatch",
+          "found": [
+            "pattern_mismatch"
+          ],
+          "pass": true,
+          "control": true,
+          "negative": false
+        },
+        {
+          "id": "E3",
+          "ac": "AC-3.2",
+          "name": "inverted validity period",
+          "expect": "temporal_consistency",
+          "found": [],
+          "pass": false,
+          "control": false,
+          "negative": false
+        },
+        {
+          "id": "E4",
+          "ac": "AC-3.3",
+          "name": "malformed start datetime",
+          "expect": "format_mismatch",
+          "found": [],
+          "pass": false,
+          "control": false,
+          "negative": false
+        },
+        {
+          "id": "E5",
+          "ac": "AC-3.3-control",
+          "name": "malformed end datetime",
+          "expect": "format_mismatch",
+          "found": [
+            "format_mismatch"
+          ],
+          "pass": true,
+          "control": true,
+          "negative": false
+        },
+        {
+          "id": "E6",
+          "ac": "AC-3.4",
+          "name": "invalid enum member",
+          "expect": "enum_membership",
+          "found": [],
+          "pass": false,
+          "control": false,
+          "negative": false
+        },
+        {
+          "id": "E7",
+          "ac": "AC-4.1",
+          "name": "deprecated field in use",
+          "expect": "deprecated_field",
+          "found": [],
+          "pass": false,
+          "control": false,
+          "negative": false
+        },
+        {
+          "id": "N1",
+          "ac": "AC-3.5",
+          "name": "zero quantity is legitimate",
+          "expect": null,
+          "found": [],
+          "pass": true,
+          "control": false,
+          "negative": true
+        },
+        {
+          "id": "N2",
+          "ac": "AC-1.6",
+          "name": "canonical payload is clean",
+          "expect": null,
+          "found": [],
+          "pass": true,
+          "control": false,
+          "negative": true
+        }
+      ]
+    },
+    "mismapped_keys": {
+      "cases": 44,
+      "pass": 28,
+      "detected": 20,
+      "resolved": 28,
+      "by_tier": {
+        "normalisation": {
+          "n": 24,
+          "pass": 24,
+          "detected": 0,
+          "resolved": 24
+        },
+        "hard": {
+          "n": 10,
+          "pass": 0,
+          "detected": 10,
+          "resolved": 0
+        },
+        "expert": {
+          "n": 2,
+          "pass": 0,
+          "detected": 2,
+          "resolved": 0
+        },
+        "moderate": {
+          "n": 4,
+          "pass": 0,
+          "detected": 4,
+          "resolved": 0
+        },
+        "control": {
+          "n": 4,
+          "pass": 4,
+          "detected": 4,
+          "resolved": 4
+        }
+      },
+      "credits_used": 2,
+      "detail": [
+        {
+          "id": "M01",
+          "key": "quantity",
+          "tier": "normalisation",
+          "expect_behaviour": "resolve_silently",
+          "expect": "Quantity",
+          "detected": false,
+          "suggestions": [],
+          "resolved": true,
+          "pass": true
+        },
+        {
+          "id": "M02",
+          "key": "unit of measure id",
+          "tier": "normalisation",
+          "expect_behaviour": "resolve_silently",
+          "expect": "Unit Of Measure ID",
+          "detected": false,
+          "suggestions": [],
+          "resolved": true,
+          "pass": true
+        },
+        {
+          "id": "M03",
+          "key": "unitOfMeasureId",
+          "tier": "normalisation",
+          "expect_behaviour": "resolve_silently",
+          "expect": "Unit Of Measure ID",
+          "detected": false,
+          "suggestions": [],
+          "resolved": true,
+          "pass": true
+        },
+        {
+          "id": "M04",
+          "key": "unit_of_measure_id",
+          "tier": "normalisation",
+          "expect_behaviour": "resolve_silently",
+          "expect": "Unit Of Measure ID",
+          "detected": false,
+          "suggestions": [],
+          "resolved": true,
+          "pass": true
+        },
+        {
+          "id": "M05",
+          "key": "valid from datetime",
+          "tier": "normalisation",
+          "expect_behaviour": "resolve_silently",
+          "expect": "Valid From Datetime",
+          "detected": false,
+          "suggestions": [],
+          "resolved": true,
+          "pass": true
+        },
+        {
+          "id": "M06",
+          "key": "validFromDatetime",
+          "tier": "normalisation",
+          "expect_behaviour": "resolve_silently",
+          "expect": "Valid From Datetime",
+          "detected": false,
+          "suggestions": [],
+          "resolved": true,
+          "pass": true
+        },
+        {
+          "id": "M07",
+          "key": "valid_from_datetime",
+          "tier": "normalisation",
+          "expect_behaviour": "resolve_silently",
+          "expect": "Valid From Datetime",
+          "detected": false,
+          "suggestions": [],
+          "resolved": true,
+          "pass": true
+        },
+        {
+          "id": "M08",
+          "key": "valid to datetime",
+          "tier": "normalisation",
+          "expect_behaviour": "resolve_silently",
+          "expect": "Valid To Datetime",
+          "detected": false,
+          "suggestions": [],
+          "resolved": true,
+          "pass": true
+        },
+        {
+          "id": "M09",
+          "key": "validToDatetime",
+          "tier": "normalisation",
+          "expect_behaviour": "resolve_silently",
+          "expect": "Valid To Datetime",
+          "detected": false,
+          "suggestions": [],
+          "resolved": true,
+          "pass": true
+        },
+        {
+          "id": "M10",
+          "key": "valid_to_datetime",
+          "tier": "normalisation",
+          "expect_behaviour": "resolve_silently",
+          "expect": "Valid To Datetime",
+          "detected": false,
+          "suggestions": [],
+          "resolved": true,
+          "pass": true
+        },
+        {
+          "id": "M11",
+          "key": "emission activity id",
+          "tier": "normalisation",
+          "expect_behaviour": "resolve_silently",
+          "expect": "Emission Activity ID",
+          "detected": false,
+          "suggestions": [],
+          "resolved": true,
+          "pass": true
+        },
+        {
+          "id": "M12",
+          "key": "emissionActivityId",
+          "tier": "normalisation",
+          "expect_behaviour": "resolve_silently",
+          "expect": "Emission Activity ID",
+          "detected": false,
+          "suggestions": [],
+          "resolved": true,
+          "pass": true
+        },
+        {
+          "id": "M13",
+          "key": "emission_activity_id",
+          "tier": "normalisation",
+          "expect_behaviour": "resolve_silently",
+          "expect": "Emission Activity ID",
+          "detected": false,
+          "suggestions": [],
+          "resolved": true,
+          "pass": true
+        },
+        {
+          "id": "M14",
+          "key": "emission component id",
+          "tier": "normalisation",
+          "expect_behaviour": "resolve_silently",
+          "expect": "Emission Component ID",
+          "detected": false,
+          "suggestions": [],
+          "resolved": true,
+          "pass": true
+        },
+        {
+          "id": "M15",
+          "key": "emissionComponentId",
+          "tier": "normalisation",
+          "expect_behaviour": "resolve_silently",
+          "expect": "Emission Component ID",
+          "detected": false,
+          "suggestions": [],
+          "resolved": true,
+          "pass": true
+        },
+        {
+          "id": "M16",
+          "key": "emission_component_id",
+          "tier": "normalisation",
+          "expect_behaviour": "resolve_silently",
+          "expect": "Emission Component ID",
+          "detected": false,
+          "suggestions": [],
+          "resolved": true,
+          "pass": true
+        },
+        {
+          "id": "M17",
+          "key": "name",
+          "tier": "normalisation",
+          "expect_behaviour": "resolve_silently",
+          "expect": "Name",
+          "detected": false,
+          "suggestions": [],
+          "resolved": true,
+          "pass": true
+        },
+        {
+          "id": "M18",
+          "key": "description",
+          "tier": "normalisation",
+          "expect_behaviour": "resolve_silently",
+          "expect": "Description",
+          "detected": false,
+          "suggestions": [],
+          "resolved": true,
+          "pass": true
+        },
+        {
+          "id": "M19",
+          "key": "emission statement id",
+          "tier": "normalisation",
+          "expect_behaviour": "resolve_silently",
+          "expect": "Emission Statement ID",
+          "detected": false,
+          "suggestions": [],
+          "resolved": true,
+          "pass": true
+        },
+        {
+          "id": "M20",
+          "key": "emissionStatementId",
+          "tier": "normalisation",
+          "expect_behaviour": "resolve_silently",
+          "expect": "Emission Statement ID",
+          "detected": false,
+          "suggestions": [],
+          "resolved": true,
+          "pass": true
+        },
+        {
+          "id": "M21",
+          "key": "emission_statement_id",
+          "tier": "normalisation",
+          "expect_behaviour": "resolve_silently",
+          "expect": "Emission Statement ID",
+          "detected": false,
+          "suggestions": [],
+          "resolved": true,
+          "pass": true
+        },
+        {
+          "id": "M22",
+          "key": "emission recording method type id",
+          "tier": "normalisation",
+          "expect_behaviour": "resolve_silently",
+          "expect": "Emission Recording Method Type ID",
+          "detected": false,
+          "suggestions": [],
+          "resolved": true,
+          "pass": true
+        },
+        {
+          "id": "M23",
+          "key": "emissionRecordingMethodTypeId",
+          "tier": "normalisation",
+          "expect_behaviour": "resolve_silently",
+          "expect": "Emission Recording Method Type ID",
+          "detected": false,
+          "suggestions": [],
+          "resolved": true,
+          "pass": true
+        },
+        {
+          "id": "M24",
+          "key": "emission_recording_method_type_id",
+          "tier": "normalisation",
+          "expect_behaviour": "resolve_silently",
+          "expect": "Emission Recording Method Type ID",
+          "detected": false,
+          "suggestions": [],
+          "resolved": true,
+          "pass": true
+        },
+        {
+          "id": "M25",
+          "key": "co2eKg",
+          "tier": "hard",
+          "expect_behaviour": "warn_with_suggestion",
+          "expect": "Quantity",
+          "detected": true,
+          "suggestions": [],
+          "resolved": false,
+          "pass": false
+        },
+        {
+          "id": "M26",
+          "key": "emissionQuantity",
+          "tier": "hard",
+          "expect_behaviour": "warn_with_suggestion",
+          "expect": "Quantity",
+          "detected": true,
+          "suggestions": [],
+          "resolved": false,
+          "pass": false
+        },
+        {
+          "id": "M27",
+          "key": "MENGE",
+          "tier": "expert",
+          "expect_behaviour": "warn_with_suggestion",
+          "expect": "Quantity",
+          "detected": true,
+          "suggestions": [],
+          "resolved": false,
+          "pass": false
+        },
+        {
+          "id": "M28",
+          "key": "MEINS",
+          "tier": "expert",
+          "expect_behaviour": "warn_with_suggestion",
+          "expect": "Unit Of Measure ID",
+          "detected": true,
+          "suggestions": [],
+          "resolved": false,
+          "pass": false
+        },
+        {
+          "id": "M29",
+          "key": "uom",
+          "tier": "hard",
+          "expect_behaviour": "warn_with_suggestion",
+          "expect": "Unit Of Measure ID",
+          "detected": true,
+          "suggestions": [],
+          "resolved": false,
+          "pass": false
+        },
+        {
+          "id": "M30",
+          "key": "unit",
+          "tier": "hard",
+          "expect_behaviour": "warn_with_suggestion",
+          "expect": "Unit Of Measure ID",
+          "detected": true,
+          "suggestions": [],
+          "resolved": false,
+          "pass": false
+        },
+        {
+          "id": "M31",
+          "key": "periodStart",
+          "tier": "hard",
+          "expect_behaviour": "warn_with_suggestion",
+          "expect": "Valid From Datetime",
+          "detected": true,
+          "suggestions": [],
+          "resolved": false,
+          "pass": false
+        },
+        {
+          "id": "M32",
+          "key": "periodEnd",
+          "tier": "hard",
+          "expect_behaviour": "warn_with_suggestion",
+          "expect": "Valid To Datetime",
+          "detected": true,
+          "suggestions": [],
+          "resolved": false,
+          "pass": false
+        },
+        {
+          "id": "M33",
+          "key": "startDate",
+          "tier": "hard",
+          "expect_behaviour": "warn_with_suggestion",
+          "expect": "Valid From Datetime",
+          "detected": true,
+          "suggestions": [],
+          "resolved": false,
+          "pass": false
+        },
+        {
+          "id": "M34",
+          "key": "validFrom",
+          "tier": "moderate",
+          "expect_behaviour": "warn_with_suggestion",
+          "expect": "Valid From Datetime",
+          "detected": true,
+          "suggestions": [],
+          "resolved": false,
+          "pass": false
+        },
+        {
+          "id": "M35",
+          "key": "activityId",
+          "tier": "moderate",
+          "expect_behaviour": "warn_with_suggestion",
+          "expect": "Emission Activity ID",
+          "detected": true,
+          "suggestions": [],
+          "resolved": false,
+          "pass": false
+        },
+        {
+          "id": "M36",
+          "key": "emission_activity",
+          "tier": "hard",
+          "expect_behaviour": "warn_with_suggestion",
+          "expect": "Emission Activity ID",
+          "detected": true,
+          "suggestions": [],
+          "resolved": false,
+          "pass": false
+        },
+        {
+          "id": "M37",
+          "key": "statementName",
+          "tier": "hard",
+          "expect_behaviour": "warn_with_suggestion",
+          "expect": "Name",
+          "detected": true,
+          "suggestions": [],
+          "resolved": false,
+          "pass": false
+        },
+        {
+          "id": "M38",
+          "key": "desc",
+          "tier": "hard",
+          "expect_behaviour": "warn_with_suggestion",
+          "expect": "Description",
+          "detected": true,
+          "suggestions": [],
+          "resolved": false,
+          "pass": false
+        },
+        {
+          "id": "M39",
+          "key": "Emision Statement ID",
+          "tier": "moderate",
+          "expect_behaviour": "warn_with_suggestion",
+          "expect": "Emission Statement ID",
+          "detected": true,
+          "suggestions": [],
+          "resolved": false,
+          "pass": false
+        },
+        {
+          "id": "M40",
+          "key": "Emission Statment ID",
+          "tier": "moderate",
+          "expect_behaviour": "warn_with_suggestion",
+          "expect": "Emission Statement ID",
+          "detected": true,
+          "suggestions": [],
+          "resolved": false,
+          "pass": false
+        },
+        {
+          "id": "M41",
+          "key": "internal_row_hash",
+          "tier": "control",
+          "expect_behaviour": "warn_without_suggestion",
+          "expect": null,
+          "detected": true,
+          "suggestions": [],
+          "resolved": true,
+          "pass": true
+        },
+        {
+          "id": "M42",
+          "key": "__etl_batch_id",
+          "tier": "control",
+          "expect_behaviour": "warn_without_suggestion",
+          "expect": null,
+          "detected": true,
+          "suggestions": [],
+          "resolved": true,
+          "pass": true
+        },
+        {
+          "id": "M43",
+          "key": "customerNotes",
+          "tier": "control",
+          "expect_behaviour": "warn_without_suggestion",
+          "expect": null,
+          "detected": true,
+          "suggestions": [],
+          "resolved": true,
+          "pass": true
+        },
+        {
+          "id": "M44",
+          "key": "xyzzy",
+          "tier": "control",
+          "expect_behaviour": "warn_without_suggestion",
+          "expect": null,
+          "detected": true,
+          "suggestions": [],
+          "resolved": true,
+          "pass": true
+        }
+      ]
+    },
+    "valid_corpus": {
+      "cases": 8,
+      "clean": 8,
+      "false_positives": 0,
+      "detail": [
+        {
+          "id": "V1",
+          "name": "minimal \u2014 requiredFields + primary key",
+          "valid": true,
+          "violations": [],
+          "warnings": [],
+          "pass": true
+        },
+        {
+          "id": "V2",
+          "name": "full \u2014 every non-deprecated field",
+          "valid": true,
+          "violations": [],
+          "warnings": [],
+          "pass": true
+        },
+        {
+          "id": "V3",
+          "name": "zero quantity",
+          "valid": true,
+          "violations": [],
+          "warnings": [],
+          "pass": true
+        },
+        {
+          "id": "V4",
+          "name": "single-instant validity period",
+          "valid": true,
+          "violations": [],
+          "warnings": [],
+          "pass": true
+        },
+        {
+          "id": "V5",
+          "name": "high-precision quantity",
+          "valid": true,
+          "violations": [],
+          "warnings": [],
+          "pass": true
+        },
+        {
+          "id": "V6",
+          "name": "large quantity",
+          "valid": true,
+          "violations": [],
+          "warnings": [],
+          "pass": true
+        },
+        {
+          "id": "V7",
+          "name": "unicode and punctuation in free text",
+          "valid": true,
+          "violations": [],
+          "warnings": [],
+          "pass": true
+        },
+        {
+          "id": "V8",
+          "name": "fractional-offset timezone",
+          "valid": true,
+          "violations": [],
+          "warnings": [],
+          "pass": true
+        }
+      ]
+    },
+    "latency_ms": {
+      "n": 0,
+      "skipped": true
+    }
+  },
+  "server": {
+    "name": "dveracity-semantic",
+    "version": "0.5.2"
+  },
+  "commit": "6c2d110"
+}

@@ -1,0 +1,64 @@
+name: Validation conformance
+
+# Sealed conformance fixtures - see test/conformance/README.md.
+#
+# CREDIT COST: ofp_validate costs 1 credit per call. A full run is ~49 credits;
+# a PR run (latency suite skipped) is ~19. This is why PRs get the cheap run and
+# only main and the nightly schedule get the full one.
+on:
+  pull_request:
+  push:
+    branches: [main]
+  schedule:
+    - cron: "0 6 * * *"
+  workflow_dispatch:
+
+jobs:
+  conformance:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+
+      - name: Run conformance suite
+        working-directory: test/conformance
+        env:
+          DVERACITY_API_KEY: ${{ secrets.DVERACITY_API_KEY }}
+        run: |
+          if [ -z "$DVERACITY_API_KEY" ]; then
+            echo "::error::DVERACITY_API_KEY secret is not set."
+            exit 1
+          fi
+          # Only the nightly schedule and merges to main pay for latency samples.
+          # PRs and manual dispatch get the cheap run. Defaulting the OTHER way
+          # round cost 52 credits on an unattended manual run on 2026-09-07 when
+          # 22 was expected, so the expensive path is now opt-in by trigger.
+          case "${{ github.event_name }}" in
+            schedule|push) python3 run_fixtures.py --latency 30 ;;
+            *)             python3 run_fixtures.py --latency 0  ;;
+          esac
+
+      - name: Parameter strictness (accepted-red, non-gating)
+        working-directory: test/conformance
+        env:
+          DVERACITY_API_KEY: ${{ secrets.DVERACITY_API_KEY }}
+        run: |
+          # Encodes the agreed target behaviour from #11, which has not shipped.
+          # Deliberately NOT gating: remove --gate suppression once #11 lands.
+          # Covers the paid tools on every run by decision of 2026-09-07.
+          # Measured cost: 3 credits/run at 0.5.2 (semantic_query 1, ofp_validate
+          # 1 in P1, ofp_validate 1 in P4). validate_data is free. This should
+          # fall to 0 once #11 ships, since a rejected call should not be billed.
+          # Pass --no-paid to drop it back to free.
+          python3 run_param_strictness.py
+
+      - name: Upload baseline
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: conformance-baseline-${{ github.sha }}
+          path: |
+            test/conformance/baseline.json
+            test/conformance/baseline-param-strictness.json

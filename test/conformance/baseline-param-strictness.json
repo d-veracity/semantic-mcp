@@ -1,0 +1,127 @@
+{
+  "server": {
+    "name": "dveracity-semantic",
+    "version": "0.5.2"
+  },
+  "suite": "parameter-strictness",
+  "issue": "d-veracity/semantic-mcp#11",
+  "status": "accepted-red",
+  "paid_tools_included": true,
+  "credits": {
+    "before": 1766,
+    "after": 1763,
+    "spent": 3
+  },
+  "results": {
+    "P1": {
+      "passed": 0,
+      "total": 10,
+      "rows": [
+        {
+          "tool": "ofp_search_entities",
+          "rejected": false,
+          "names_key": false,
+          "pass": false
+        },
+        {
+          "tool": "ofp_entity",
+          "rejected": false,
+          "names_key": false,
+          "pass": false
+        },
+        {
+          "tool": "ofp_sectors",
+          "rejected": false,
+          "names_key": false,
+          "pass": false
+        },
+        {
+          "tool": "ofp_sector",
+          "rejected": false,
+          "names_key": false,
+          "pass": false
+        },
+        {
+          "tool": "ofp_policies",
+          "rejected": false,
+          "names_key": false,
+          "pass": false
+        },
+        {
+          "tool": "ofp_semantics",
+          "rejected": false,
+          "names_key": false,
+          "pass": false
+        },
+        {
+          "tool": "ofp_semantic_code",
+          "rejected": false,
+          "names_key": false,
+          "pass": false
+        },
+        {
+          "tool": "semantic_query",
+          "rejected": false,
+          "names_key": false,
+          "pass": false
+        },
+        {
+          "tool": "validate_data",
+          "rejected": true,
+          "names_key": false,
+          "pass": false
+        },
+        {
+          "tool": "ofp_validate",
+          "rejected": false,
+          "names_key": false,
+          "pass": false
+        }
+      ],
+      "pass": false
+    },
+    "P2": {
+      "passed": 0,
+      "total": 4,
+      "rows": [
+        {
+          "tool": "semantic_templates",
+          "rejected": false,
+          "names_key": false,
+          "pass": false
+        },
+        {
+          "tool": "list_standards",
+          "rejected": false,
+          "names_key": false,
+          "pass": false
+        },
+        {
+          "tool": "ofp_models",
+          "rejected": false,
+          "names_key": false,
+          "pass": false
+        },
+        {
+          "tool": "ofp_model_provenance",
+          "rejected": false,
+          "names_key": false,
+          "pass": false
+        }
+      ],
+      "pass": false
+    },
+    "P3": {
+      "rejected": false,
+      "silently_dropped": true,
+      "correct_n": 0,
+      "near_n": 100,
+      "pass": false
+    },
+    "P4": {
+      "reason": "no_sector_supplied",
+      "misattributed": true,
+      "pass": false
+    }
+  }
+}
