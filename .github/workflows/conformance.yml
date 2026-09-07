@@ -31,11 +31,14 @@ jobs:
             echo "::error::DVERACITY_API_KEY secret is not set."
             exit 1
           fi
-          if [ "${{ github.event_name }}" = "pull_request" ]; then
-            python3 run_fixtures.py --latency 0
-          else
-            python3 run_fixtures.py --latency 30
-          fi
+          # Only the nightly schedule and merges to main pay for latency samples.
+          # PRs and manual dispatch get the cheap run. Defaulting the OTHER way
+          # round cost 52 credits on an unattended manual run on 2026-09-07 when
+          # 22 was expected, so the expensive path is now opt-in by trigger.
+          case "${{ github.event_name }}" in
+            schedule|push) python3 run_fixtures.py --latency 30 ;;
+            *)             python3 run_fixtures.py --latency 0  ;;
+          esac
 
       - name: Parameter strictness (accepted-red, non-gating)
         working-directory: test/conformance
