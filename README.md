@@ -115,6 +115,36 @@ alone is not a compliant one, and should not be described as one.
 
 A fourth outcome, `unevaluable`, means the sector's rules ran but every rule that came back false reads an input the payload does not carry (`policy.missingInputs`, e.g. `co2e_kg`, `direction`, `counterparty_industry`). Those are e-ledger record fields, not canonical Open Footprint field names — `ofp_policies` lists them per policy under `inputs`. Unevaluable is neither a pass nor a breach, and `valid` is `null`.
 
+### What `ofp_validate` checks, and what it does not
+
+The response is a contract, not a verdict. Every call reports the check
+catalogue in two lists: `checked` (what ran) and `checks_not_run` (what did not,
+each with a `reason` and usually a `detail`). Read both before describing a
+payload as anything.
+
+| Check | Status in 0.5.x | Reason reported |
+|---|---|---|
+| `schema` — presence, primary key, types, declared constraints | runs | — |
+| `value_range` | not run: the model declares no numeric range on any field | `no_range_declared` |
+| `unit_coherence` | not run | `not_implemented` |
+| `temporal_consistency` | not run: an inverted validity period passes | `not_implemented` |
+| `referential_integrity` | not run: foreign keys are pattern-checked, never resolved | `no_data_plane` |
+| `factor_provenance` | not run | `not_implemented` |
+| `materiality` | not run | `not_implemented` |
+| `sector_policy` | runs when a sector with published guardrails covers the record type | `no_sector_supplied`, `no_policy_published`, `not_applicable`, `unevaluable` |
+
+- `schemaValid` is the structural verdict (`null` if the structural check could not run).
+- `assuranceLevel` names the depth earned: `schema-only`, `schema-and-value`,
+  `schema-value-and-policy` or `full`. Each level needs every check beneath it,
+  so guardrails without a value check is still `schema-only`.
+- Every violation and warning carries `severity` (`error` | `warning`). Rule ids
+  are stable: `required_field_missing`, `pattern_mismatch`, `format_mismatch`,
+  `type_mismatch`, `primary_key_missing`, `enum_violation`, … `unknown_field` is a
+  per-field warning and stays one.
+- `valid` is **deprecated** (see `deprecations` in the response). It keeps its
+  0.5.0 meaning through the 0.5.x line and is removed no earlier than 0.6.0.
+  Read `schemaValid` instead.
+
 ## Billing behavior (for agents)
 
 Metered calls return an **HTTP 402** when the account is out of credits. The
