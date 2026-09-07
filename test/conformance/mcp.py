@@ -36,11 +36,21 @@ def _header_file():
 
 
 def call(tool, args, timeout=60):
-    """Call an MCP tool. Returns (parsed_result, elapsed_seconds)."""
-    payload = json.dumps({
-        "jsonrpc": "2.0", "id": 1, "method": "tools/call",
-        "params": {"name": tool, "arguments": args},
-    })
+    """Call an MCP tool. Returns (parsed_result, elapsed_seconds).
+
+    The sentinel tool name ``__initialize__`` issues an MCP ``initialize``
+    handshake instead and returns the raw result, so a caller can record which
+    server build produced its numbers. Costs no credits.
+    """
+    if tool == "__initialize__":
+        body = {"jsonrpc": "2.0", "id": 1, "method": "initialize",
+                "params": {"protocolVersion": "2025-06-18", "capabilities": {},
+                           "clientInfo": {"name": "dve-conformance",
+                                          "version": "1"}}}
+    else:
+        body = {"jsonrpc": "2.0", "id": 1, "method": "tools/call",
+                "params": {"name": tool, "arguments": args}}
+    payload = json.dumps(body)
     cmd = [
         "curl", "-s", "-X", "POST", ENDPOINT,
         "-H", "Content-Type: application/json",
@@ -67,6 +77,8 @@ def call(tool, args, timeout=60):
     if "error" in msg:
         return {"_rpc_error": msg["error"]}, elapsed
     res = msg.get("result", {})
+    if tool == "__initialize__":
+        return res, elapsed
     text = "".join(c.get("text", "") for c in res.get("content", []))
     if res.get("isError"):
         return {"_tool_error": text}, elapsed

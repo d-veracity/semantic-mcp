@@ -21,6 +21,15 @@ if "--latency" in sys.argv:
 
 report = {"endpoint": mcp.ENDPOINT, "results": {}}
 
+# Record WHICH SERVER BUILD produced these numbers. Without it a baseline cannot
+# be compared across runs: a version string read on one day and a repo cloned on
+# another will silently disagree, and you will not know which build the numbers
+# describe. Free — initialize costs no credits.
+_init, _ = mcp.call("__initialize__", None)
+report["server"] = _init.get("serverInfo") if isinstance(_init, dict) else None
+if not report["server"]:
+    print("WARNING: could not read serverInfo; baseline is unattributed.")
+
 
 def parts(r):
     d = r.get("data", {})
@@ -158,7 +167,8 @@ out = pathlib.Path(__file__).parent / "baseline.json"
 out.write_text(json.dumps(report, indent=2))
 
 s = report["results"]
-print(f"commit under test: {report.get('commit')}")
+print(f"server under test: {report.get('server')}")
+print(f"model commit     : {report.get('commit')}")
 print(f"error probe   : {s['semantic_error_probe']['detected']}"
       f"/{s['semantic_error_probe']['detectable']} detected  |  "
       f"{s['semantic_error_probe']['negative_tests_pass']}"

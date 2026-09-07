@@ -25,7 +25,7 @@ environment is evidence.
 
 ---
 
-## Baseline — commit `6c2d110`, measured 2026-09-07
+## Baseline — server `0.5.2`, model `6c2d110`, measured 2026-09-07
 
 | Suite | Result |
 |---|---|
@@ -34,7 +34,10 @@ environment is evidence.
 | Semantic synonym resolution | **0 / 16** |
 | Foreign-key controls | **4 / 4** |
 | Valid-payload corpus | **8 / 8** clean · **0** false positives |
-| Latency | p50 **64.4 ms** · p90 **190.4 ms** |
+| Latency | p50 **64.4 ms** – **138.5 ms** across runs (see caveat) |
+
+Every run records the server build in `baseline.json` under `server`. Do not
+compare two baselines without checking it — see "Attributing a baseline" below.
 
 ### The baseline corrects the PRD in the product's favour
 
@@ -162,7 +165,40 @@ should. Worth considering a free or metered validation tier for CI use.
 - **Latency n=30, not 100.** Each call costs a credit. n=30 gives a stable p50;
   raise with `--latency 100` when it matters.
 - **Latency is wall clock from the QA sandbox**, including network. Not
-  server-side time. Use it as a regression signal, not an SLA.
+  server-side time.
+
+### Latency is too noisy to gate on
+
+Two runs ten minutes apart on the same server build and the same payload:
+
+| Run | p50 | p90 | min | max |
+|---|---|---|---|---|
+| 16:56 UTC | 64.4 ms | 190.4 ms | — | — |
+| 17:10 UTC | 138.5 ms | 249.3 ms | 24.4 ms | 278.1 ms |
+
+The p50 more than doubled with no change to the server. An 11x spread between
+min and max within a single run points at cold starts or shared-tenant
+variance on the Cloud Run backend, not at validation cost.
+
+**Do not gate on this number.** The regression gate deliberately ignores
+latency. Treat it as a coarse trend only, and if a real latency budget is
+needed, measure server-side instead.
+
+## Attributing a baseline
+
+A baseline is meaningless without knowing which build produced it. This suite
+learned that the hard way: a server version read on 2026-09-05 was compared
+against a repo cloned on 2026-09-07, and the two-day gap spanned two releases.
+The conclusion drawn — that the deployment was stale — was wrong.
+
+`run_fixtures.py` now issues an MCP `initialize` before any test and records
+`serverInfo` in `baseline.json`. It costs no credits. If it cannot be read, the
+run prints a warning and the baseline is marked unattributed.
+
+Note that the npm package `@dveracity/semantic-mcp` is a **stdio wrapper** that
+calls the REST backend; the remote endpoint at `api.dveracity.com/mcp` is a
+separate server-side artifact. They share a version number but are not the same
+build. Check `serverInfo` from the endpoint you actually tested.
 
 ---
 

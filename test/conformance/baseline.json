@@ -702,12 +702,16 @@
     },
     "latency_ms": {
       "n": 30,
-      "p50": 67.5,
-      "p90": 243.6,
-      "min": 24.0,
-      "max": 339.4,
+      "p50": 138.5,
+      "p90": 249.3,
+      "min": 24.4,
+      "max": 278.1,
       "note": "Wall clock incl. network from the client, not server-side time. Treat as a regression signal, not an SLA."
     }
+  },
+  "server": {
+    "name": "dveracity-semantic",
+    "version": "0.5.2"
   },
   "commit": "6c2d110"
 }
