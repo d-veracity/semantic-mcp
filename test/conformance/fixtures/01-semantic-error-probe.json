@@ -1,0 +1,126 @@
+{
+  "fixture": "semantic-error-probe",
+  "entity": "Emission Statement",
+  "domain": "common-entities",
+  "purpose": "Each case plants exactly one semantically impossible value using the CORRECT canonical field name. Cases are keyed to PRD acceptance criteria. Authored independently of the implementation.",
+  "base_payload": {
+    "Emission Activity ID": "dveracity:master-data--EmissionActivity:X-001:1",
+    "Emission Calculation Model ID": "dveracity:master-data--EmissionCalculationModel:X-001:1",
+    "Emission Component ID": "dveracity:reference-data--EmissionComponent:X-001:1",
+    "Quantity": 1250.5,
+    "Emission Recording Method Type ID": "dveracity:reference-data--EmissionRecordingMethodType:X-001:1",
+    "Description": "Purchased electricity for the main venue.",
+    "Emission Statement ID": "dveracity:transactional-data--EmissionStatement:X-001:1",
+    "Name": "Venue electricity, September 2026",
+    "Parent Emission Statement ID": "dveracity:transactional-data--EmissionStatement:X-001:1",
+    "Unit Of Measure ID": "dveracity:reference-data--UnitOfMeasure:X-001:1",
+    "Valid From Datetime": "2026-09-01T00:00:00Z",
+    "Valid To Datetime": "2026-09-30T23:59:59Z"
+  },
+  "cases": [
+    {
+      "id": "E1",
+      "ac": "AC-3.1",
+      "name": "negative quantity",
+      "patch": {
+        "Quantity": -999999
+      },
+      "expect_rule": "value_range",
+      "expect_field": "Quantity",
+      "model_basis": "Quantity is numeric; a negative mass of emissions is physically impossible. Model declares constraints:null, which is why this is currently missed.",
+      "blocked_by": "Q2 \u2014 confirm which fields permit negatives"
+    },
+    {
+      "id": "E2",
+      "ac": "AC-1.5b",
+      "name": "invalid unit, canonical key",
+      "patch": {
+        "Unit Of Measure ID": "bananas"
+      },
+      "expect_rule": "pattern_mismatch",
+      "expect_field": "Unit Of Measure ID",
+      "model_basis": "Field declares a reference-data--UnitOfMeasure pattern.",
+      "note": "CONTROL CASE. Already passes. Proves the constraint is reachable when the key is canonical \u2014 contrast with M-CTRL."
+    },
+    {
+      "id": "E3",
+      "ac": "AC-3.2",
+      "name": "inverted validity period",
+      "patch": {
+        "Valid From Datetime": "2027-01-01T00:00:00Z",
+        "Valid To Datetime": "2020-01-01T00:00:00Z"
+      },
+      "expect_rule": "temporal_consistency",
+      "expect_field": [
+        "Valid From Datetime",
+        "Valid To Datetime"
+      ],
+      "model_basis": "Fields form a validity pair via naming convention; start must not follow end. No cross-field constraint is expressible in the current model, so this must be implemented in the validator."
+    },
+    {
+      "id": "E4",
+      "ac": "AC-3.3",
+      "name": "malformed start datetime",
+      "patch": {
+        "Valid From Datetime": "not a date"
+      },
+      "expect_rule": "format_mismatch",
+      "expect_field": "Valid From Datetime",
+      "model_basis": "MODEL DEFECT (openfootprint#48): Valid From Datetime declares constraints:null while its required partner Valid To Datetime declares format:date-time. The validator must not inherit this asymmetry."
+    },
+    {
+      "id": "E5",
+      "ac": "AC-3.3-control",
+      "name": "malformed end datetime",
+      "patch": {
+        "Valid To Datetime": "not a date"
+      },
+      "expect_rule": "format_mismatch",
+      "expect_field": "Valid To Datetime",
+      "model_basis": "Field declares format:date-time.",
+      "note": "CONTROL CASE. Already passes. Its pairing with E4 isolates the model asymmetry as the sole cause of the E4 miss."
+    },
+    {
+      "id": "E6",
+      "ac": "AC-3.4",
+      "name": "invalid enum member",
+      "patch": {
+        "Emission Recording Method Type ID": "dveracity:reference-data--EmissionRecordingMethodType:scope9:1"
+      },
+      "expect_rule": "enum_membership",
+      "expect_field": "Emission Recording Method Type ID",
+      "model_basis": "Reference-data FK. Pattern passes, but the referent is not a member of the reference set. Requires membership checking beyond regex.",
+      "note": "Distinguishes pattern conformance from referent validity."
+    },
+    {
+      "id": "E7",
+      "ac": "AC-4.1",
+      "name": "deprecated field in use",
+      "patch": {
+        "Emission Report ID": "dveracity:transactional-data--EmissionReport:R-1:1"
+      },
+      "expect_rule": "deprecated_field",
+      "expect_field": "Emission Report ID",
+      "expect_severity": "warning",
+      "model_basis": "Field description begins 'DEPRECATED'. Four such fields exist on this entity."
+    },
+    {
+      "id": "N1",
+      "ac": "AC-3.5",
+      "name": "zero quantity is legitimate",
+      "patch": {
+        "Quantity": 0
+      },
+      "expect_rule": null,
+      "model_basis": "NEGATIVE TEST. Zero emissions is a valid measurement. Must not be swept up by the value_range check."
+    },
+    {
+      "id": "N2",
+      "ac": "AC-1.6",
+      "name": "canonical payload is clean",
+      "patch": {},
+      "expect_rule": null,
+      "model_basis": "NEGATIVE TEST. Baseline payload uses only canonical field names and satisfies every declared constraint."
+    }
+  ]
+}

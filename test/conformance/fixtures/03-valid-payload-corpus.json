@@ -1,0 +1,165 @@
+{
+  "fixture": "valid-payload-corpus",
+  "purpose": "Known-good payloads that must produce ZERO violations. Guards against false positives when new checks land. A check that breaks these is worse than the gap it closes.",
+  "cases": [
+    {
+      "id": "V1",
+      "name": "minimal \u2014 requiredFields + primary key",
+      "entity": "Emission Statement",
+      "domain": "common-entities",
+      "payload": {
+        "Emission Activity ID": "dveracity:master-data--EmissionActivity:X-001:1",
+        "Emission Component ID": "dveracity:reference-data--EmissionComponent:X-001:1",
+        "Emission Recording Method Type ID": "dveracity:reference-data--EmissionRecordingMethodType:X-001:1",
+        "Emission Statement ID": "dveracity:transactional-data--EmissionStatement:X-001:1",
+        "Name": "Venue electricity, September 2026",
+        "Unit Of Measure ID": "dveracity:reference-data--UnitOfMeasure:X-001:1",
+        "Valid From Datetime": "2026-09-01T00:00:00Z",
+        "Valid To Datetime": "2026-09-30T23:59:59Z"
+      },
+      "note": "MODEL CONTRACT GAP: building this from requiredFields alone fails with primary_key_missing, because Emission Statement ID is a primaryKey but is NOT listed in requiredFields (required:false). Reported to openfootprint#48."
+    },
+    {
+      "id": "V2",
+      "name": "full \u2014 every non-deprecated field",
+      "entity": "Emission Statement",
+      "domain": "common-entities",
+      "payload": {
+        "Emission Activity ID": "dveracity:master-data--EmissionActivity:X-001:1",
+        "Emission Calculation Model ID": "dveracity:master-data--EmissionCalculationModel:X-001:1",
+        "Emission Component ID": "dveracity:reference-data--EmissionComponent:X-001:1",
+        "Quantity": 1250.5,
+        "Emission Recording Method Type ID": "dveracity:reference-data--EmissionRecordingMethodType:X-001:1",
+        "Description": "Purchased electricity for the main venue.",
+        "Emission Statement ID": "dveracity:transactional-data--EmissionStatement:X-001:1",
+        "Name": "Venue electricity, September 2026",
+        "Parent Emission Statement ID": "dveracity:transactional-data--EmissionStatement:X-001:1",
+        "Unit Of Measure ID": "dveracity:reference-data--UnitOfMeasure:X-001:1",
+        "Valid From Datetime": "2026-09-01T00:00:00Z",
+        "Valid To Datetime": "2026-09-30T23:59:59Z"
+      }
+    },
+    {
+      "id": "V3",
+      "name": "zero quantity",
+      "entity": "Emission Statement",
+      "domain": "common-entities",
+      "payload": {
+        "Emission Activity ID": "dveracity:master-data--EmissionActivity:X-001:1",
+        "Emission Calculation Model ID": "dveracity:master-data--EmissionCalculationModel:X-001:1",
+        "Emission Component ID": "dveracity:reference-data--EmissionComponent:X-001:1",
+        "Quantity": 0,
+        "Emission Recording Method Type ID": "dveracity:reference-data--EmissionRecordingMethodType:X-001:1",
+        "Description": "Purchased electricity for the main venue.",
+        "Emission Statement ID": "dveracity:transactional-data--EmissionStatement:X-001:1",
+        "Name": "Venue electricity, September 2026",
+        "Parent Emission Statement ID": "dveracity:transactional-data--EmissionStatement:X-001:1",
+        "Unit Of Measure ID": "dveracity:reference-data--UnitOfMeasure:X-001:1",
+        "Valid From Datetime": "2026-09-01T00:00:00Z",
+        "Valid To Datetime": "2026-09-30T23:59:59Z"
+      }
+    },
+    {
+      "id": "V4",
+      "name": "single-instant validity period",
+      "entity": "Emission Statement",
+      "domain": "common-entities",
+      "payload": {
+        "Emission Activity ID": "dveracity:master-data--EmissionActivity:X-001:1",
+        "Emission Calculation Model ID": "dveracity:master-data--EmissionCalculationModel:X-001:1",
+        "Emission Component ID": "dveracity:reference-data--EmissionComponent:X-001:1",
+        "Quantity": 1250.5,
+        "Emission Recording Method Type ID": "dveracity:reference-data--EmissionRecordingMethodType:X-001:1",
+        "Description": "Purchased electricity for the main venue.",
+        "Emission Statement ID": "dveracity:transactional-data--EmissionStatement:X-001:1",
+        "Name": "Venue electricity, September 2026",
+        "Parent Emission Statement ID": "dveracity:transactional-data--EmissionStatement:X-001:1",
+        "Unit Of Measure ID": "dveracity:reference-data--UnitOfMeasure:X-001:1",
+        "Valid From Datetime": "2026-09-01T00:00:00Z",
+        "Valid To Datetime": "2026-09-01T00:00:00Z"
+      },
+      "note": "start == end must be accepted; the rule is start <= end"
+    },
+    {
+      "id": "V5",
+      "name": "high-precision quantity",
+      "entity": "Emission Statement",
+      "domain": "common-entities",
+      "payload": {
+        "Emission Activity ID": "dveracity:master-data--EmissionActivity:X-001:1",
+        "Emission Calculation Model ID": "dveracity:master-data--EmissionCalculationModel:X-001:1",
+        "Emission Component ID": "dveracity:reference-data--EmissionComponent:X-001:1",
+        "Quantity": 1.234e-06,
+        "Emission Recording Method Type ID": "dveracity:reference-data--EmissionRecordingMethodType:X-001:1",
+        "Description": "Purchased electricity for the main venue.",
+        "Emission Statement ID": "dveracity:transactional-data--EmissionStatement:X-001:1",
+        "Name": "Venue electricity, September 2026",
+        "Parent Emission Statement ID": "dveracity:transactional-data--EmissionStatement:X-001:1",
+        "Unit Of Measure ID": "dveracity:reference-data--UnitOfMeasure:X-001:1",
+        "Valid From Datetime": "2026-09-01T00:00:00Z",
+        "Valid To Datetime": "2026-09-30T23:59:59Z"
+      }
+    },
+    {
+      "id": "V6",
+      "name": "large quantity",
+      "entity": "Emission Statement",
+      "domain": "common-entities",
+      "payload": {
+        "Emission Activity ID": "dveracity:master-data--EmissionActivity:X-001:1",
+        "Emission Calculation Model ID": "dveracity:master-data--EmissionCalculationModel:X-001:1",
+        "Emission Component ID": "dveracity:reference-data--EmissionComponent:X-001:1",
+        "Quantity": 98765432.1,
+        "Emission Recording Method Type ID": "dveracity:reference-data--EmissionRecordingMethodType:X-001:1",
+        "Description": "Purchased electricity for the main venue.",
+        "Emission Statement ID": "dveracity:transactional-data--EmissionStatement:X-001:1",
+        "Name": "Venue electricity, September 2026",
+        "Parent Emission Statement ID": "dveracity:transactional-data--EmissionStatement:X-001:1",
+        "Unit Of Measure ID": "dveracity:reference-data--UnitOfMeasure:X-001:1",
+        "Valid From Datetime": "2026-09-01T00:00:00Z",
+        "Valid To Datetime": "2026-09-30T23:59:59Z"
+      }
+    },
+    {
+      "id": "V7",
+      "name": "unicode and punctuation in free text",
+      "entity": "Emission Statement",
+      "domain": "common-entities",
+      "payload": {
+        "Emission Activity ID": "dveracity:master-data--EmissionActivity:X-001:1",
+        "Emission Calculation Model ID": "dveracity:master-data--EmissionCalculationModel:X-001:1",
+        "Emission Component ID": "dveracity:reference-data--EmissionComponent:X-001:1",
+        "Quantity": 1250.5,
+        "Emission Recording Method Type ID": "dveracity:reference-data--EmissionRecordingMethodType:X-001:1",
+        "Description": "Scope 2 \u00b7 market-based \u00b7 \u22642\u00b0C pathway",
+        "Emission Statement ID": "dveracity:transactional-data--EmissionStatement:X-001:1",
+        "Name": "Caf\u00e9 \u2014 Zone 3 (d\u00eener), 50% capacity",
+        "Parent Emission Statement ID": "dveracity:transactional-data--EmissionStatement:X-001:1",
+        "Unit Of Measure ID": "dveracity:reference-data--UnitOfMeasure:X-001:1",
+        "Valid From Datetime": "2026-09-01T00:00:00Z",
+        "Valid To Datetime": "2026-09-30T23:59:59Z"
+      }
+    },
+    {
+      "id": "V8",
+      "name": "fractional-offset timezone",
+      "entity": "Emission Statement",
+      "domain": "common-entities",
+      "payload": {
+        "Emission Activity ID": "dveracity:master-data--EmissionActivity:X-001:1",
+        "Emission Calculation Model ID": "dveracity:master-data--EmissionCalculationModel:X-001:1",
+        "Emission Component ID": "dveracity:reference-data--EmissionComponent:X-001:1",
+        "Quantity": 1250.5,
+        "Emission Recording Method Type ID": "dveracity:reference-data--EmissionRecordingMethodType:X-001:1",
+        "Description": "Purchased electricity for the main venue.",
+        "Emission Statement ID": "dveracity:transactional-data--EmissionStatement:X-001:1",
+        "Name": "Venue electricity, September 2026",
+        "Parent Emission Statement ID": "dveracity:transactional-data--EmissionStatement:X-001:1",
+        "Unit Of Measure ID": "dveracity:reference-data--UnitOfMeasure:X-001:1",
+        "Valid From Datetime": "2026-09-01T00:00:00+05:30",
+        "Valid To Datetime": "2026-09-30T23:59:59+05:30"
+      },
+      "note": "ISO 8601 permits non-hour offsets"
+    }
+  ]
+}

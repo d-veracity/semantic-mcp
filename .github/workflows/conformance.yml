@@ -1,0 +1,45 @@
+name: Validation conformance
+
+# Sealed conformance fixtures - see test/conformance/README.md.
+#
+# CREDIT COST: ofp_validate costs 1 credit per call. A full run is ~49 credits;
+# a PR run (latency suite skipped) is ~19. This is why PRs get the cheap run and
+# only main and the nightly schedule get the full one.
+on:
+  pull_request:
+  push:
+    branches: [main]
+  schedule:
+    - cron: "0 6 * * *"
+  workflow_dispatch:
+
+jobs:
+  conformance:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+
+      - name: Run conformance suite
+        working-directory: test/conformance
+        env:
+          DVERACITY_API_KEY: ${{ secrets.DVERACITY_API_KEY }}
+        run: |
+          if [ -z "$DVERACITY_API_KEY" ]; then
+            echo "::error::DVERACITY_API_KEY secret is not set."
+            exit 1
+          fi
+          if [ "${{ github.event_name }}" = "pull_request" ]; then
+            python3 run_fixtures.py --latency 0
+          else
+            python3 run_fixtures.py --latency 30
+          fi
+
+      - name: Upload baseline
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: conformance-baseline-${{ github.sha }}
+          path: test/conformance/baseline.json

@@ -1,0 +1,480 @@
+{
+  "fixture": "mismapped-key-suite",
+  "purpose": "Separates what already works from what FR-1 must add. Measured at commit 6c2d110: formatting normalisation WORKS (5 variant styles), unknown_field warnings WORK for foreign keys, didYouMean suggestions are ABSENT (0 of 67). The remaining gap is semantic synonyms, not formatting.",
+  "tiers": {
+    "normalisation": "Formatting variant. MUST resolve silently and have the canonical field's constraints applied. Already passing \u2014 regression control.",
+    "moderate": "Truncation or typo. Should warn AND suggest.",
+    "hard": "Semantic synonym. Should warn AND suggest. THE REAL GAP.",
+    "expert": "Source-system name (SAP). Aspirational.",
+    "control": "Genuinely foreign. MUST warn with NO suggestion."
+  },
+  "scoring": {
+    "normalisation": "pass = no warning AND constraints applied",
+    "detection": "non-normalisation keys must produce an unknown_field entry",
+    "resolution": "expect_resolves_to must appear in didYouMean",
+    "control": "must produce unknown_field with EMPTY didYouMean",
+    "targets": {
+      "normalisation": 1.0,
+      "moderate": 0.9,
+      "hard": 0.6,
+      "expert": 0.3,
+      "control": 1.0
+    }
+  },
+  "base_payload": {
+    "Emission Activity ID": "dveracity:master-data--EmissionActivity:X-001:1",
+    "Emission Calculation Model ID": "dveracity:master-data--EmissionCalculationModel:X-001:1",
+    "Emission Component ID": "dveracity:reference-data--EmissionComponent:X-001:1",
+    "Quantity": 1250.5,
+    "Emission Recording Method Type ID": "dveracity:reference-data--EmissionRecordingMethodType:X-001:1",
+    "Description": "Purchased electricity for the main venue.",
+    "Emission Statement ID": "dveracity:transactional-data--EmissionStatement:X-001:1",
+    "Name": "Venue electricity, September 2026",
+    "Parent Emission Statement ID": "dveracity:transactional-data--EmissionStatement:X-001:1",
+    "Unit Of Measure ID": "dveracity:reference-data--UnitOfMeasure:X-001:1",
+    "Valid From Datetime": "2026-09-01T00:00:00Z",
+    "Valid To Datetime": "2026-09-30T23:59:59Z"
+  },
+  "cases": [
+    {
+      "id": "M01",
+      "entity": "Emission Statement",
+      "supplied_key": "quantity",
+      "expect_resolves_to": "Quantity",
+      "tier": "normalisation",
+      "kind": "lower_spaced",
+      "expect_behaviour": "resolve_silently",
+      "note": "Already passing as of 6c2d110. Regression control."
+    },
+    {
+      "id": "M02",
+      "entity": "Emission Statement",
+      "supplied_key": "unit of measure id",
+      "expect_resolves_to": "Unit Of Measure ID",
+      "tier": "normalisation",
+      "kind": "lower_spaced",
+      "expect_behaviour": "resolve_silently",
+      "note": "Already passing as of 6c2d110. Regression control."
+    },
+    {
+      "id": "M03",
+      "entity": "Emission Statement",
+      "supplied_key": "unitOfMeasureId",
+      "expect_resolves_to": "Unit Of Measure ID",
+      "tier": "normalisation",
+      "kind": "camel",
+      "expect_behaviour": "resolve_silently",
+      "note": "Already passing as of 6c2d110. Regression control."
+    },
+    {
+      "id": "M04",
+      "entity": "Emission Statement",
+      "supplied_key": "unit_of_measure_id",
+      "expect_resolves_to": "Unit Of Measure ID",
+      "tier": "normalisation",
+      "kind": "snake",
+      "expect_behaviour": "resolve_silently",
+      "note": "Already passing as of 6c2d110. Regression control."
+    },
+    {
+      "id": "M05",
+      "entity": "Emission Statement",
+      "supplied_key": "valid from datetime",
+      "expect_resolves_to": "Valid From Datetime",
+      "tier": "normalisation",
+      "kind": "lower_spaced",
+      "expect_behaviour": "resolve_silently",
+      "note": "Already passing as of 6c2d110. Regression control."
+    },
+    {
+      "id": "M06",
+      "entity": "Emission Statement",
+      "supplied_key": "validFromDatetime",
+      "expect_resolves_to": "Valid From Datetime",
+      "tier": "normalisation",
+      "kind": "camel",
+      "expect_behaviour": "resolve_silently",
+      "note": "Already passing as of 6c2d110. Regression control."
+    },
+    {
+      "id": "M07",
+      "entity": "Emission Statement",
+      "supplied_key": "valid_from_datetime",
+      "expect_resolves_to": "Valid From Datetime",
+      "tier": "normalisation",
+      "kind": "snake",
+      "expect_behaviour": "resolve_silently",
+      "note": "Already passing as of 6c2d110. Regression control."
+    },
+    {
+      "id": "M08",
+      "entity": "Emission Statement",
+      "supplied_key": "valid to datetime",
+      "expect_resolves_to": "Valid To Datetime",
+      "tier": "normalisation",
+      "kind": "lower_spaced",
+      "expect_behaviour": "resolve_silently",
+      "note": "Already passing as of 6c2d110. Regression control."
+    },
+    {
+      "id": "M09",
+      "entity": "Emission Statement",
+      "supplied_key": "validToDatetime",
+      "expect_resolves_to": "Valid To Datetime",
+      "tier": "normalisation",
+      "kind": "camel",
+      "expect_behaviour": "resolve_silently",
+      "note": "Already passing as of 6c2d110. Regression control."
+    },
+    {
+      "id": "M10",
+      "entity": "Emission Statement",
+      "supplied_key": "valid_to_datetime",
+      "expect_resolves_to": "Valid To Datetime",
+      "tier": "normalisation",
+      "kind": "snake",
+      "expect_behaviour": "resolve_silently",
+      "note": "Already passing as of 6c2d110. Regression control."
+    },
+    {
+      "id": "M11",
+      "entity": "Emission Statement",
+      "supplied_key": "emission activity id",
+      "expect_resolves_to": "Emission Activity ID",
+      "tier": "normalisation",
+      "kind": "lower_spaced",
+      "expect_behaviour": "resolve_silently",
+      "note": "Already passing as of 6c2d110. Regression control."
+    },
+    {
+      "id": "M12",
+      "entity": "Emission Statement",
+      "supplied_key": "emissionActivityId",
+      "expect_resolves_to": "Emission Activity ID",
+      "tier": "normalisation",
+      "kind": "camel",
+      "expect_behaviour": "resolve_silently",
+      "note": "Already passing as of 6c2d110. Regression control."
+    },
+    {
+      "id": "M13",
+      "entity": "Emission Statement",
+      "supplied_key": "emission_activity_id",
+      "expect_resolves_to": "Emission Activity ID",
+      "tier": "normalisation",
+      "kind": "snake",
+      "expect_behaviour": "resolve_silently",
+      "note": "Already passing as of 6c2d110. Regression control."
+    },
+    {
+      "id": "M14",
+      "entity": "Emission Statement",
+      "supplied_key": "emission component id",
+      "expect_resolves_to": "Emission Component ID",
+      "tier": "normalisation",
+      "kind": "lower_spaced",
+      "expect_behaviour": "resolve_silently",
+      "note": "Already passing as of 6c2d110. Regression control."
+    },
+    {
+      "id": "M15",
+      "entity": "Emission Statement",
+      "supplied_key": "emissionComponentId",
+      "expect_resolves_to": "Emission Component ID",
+      "tier": "normalisation",
+      "kind": "camel",
+      "expect_behaviour": "resolve_silently",
+      "note": "Already passing as of 6c2d110. Regression control."
+    },
+    {
+      "id": "M16",
+      "entity": "Emission Statement",
+      "supplied_key": "emission_component_id",
+      "expect_resolves_to": "Emission Component ID",
+      "tier": "normalisation",
+      "kind": "snake",
+      "expect_behaviour": "resolve_silently",
+      "note": "Already passing as of 6c2d110. Regression control."
+    },
+    {
+      "id": "M17",
+      "entity": "Emission Statement",
+      "supplied_key": "name",
+      "expect_resolves_to": "Name",
+      "tier": "normalisation",
+      "kind": "lower_spaced",
+      "expect_behaviour": "resolve_silently",
+      "note": "Already passing as of 6c2d110. Regression control."
+    },
+    {
+      "id": "M18",
+      "entity": "Emission Statement",
+      "supplied_key": "description",
+      "expect_resolves_to": "Description",
+      "tier": "normalisation",
+      "kind": "lower_spaced",
+      "expect_behaviour": "resolve_silently",
+      "note": "Already passing as of 6c2d110. Regression control."
+    },
+    {
+      "id": "M19",
+      "entity": "Emission Statement",
+      "supplied_key": "emission statement id",
+      "expect_resolves_to": "Emission Statement ID",
+      "tier": "normalisation",
+      "kind": "lower_spaced",
+      "expect_behaviour": "resolve_silently",
+      "note": "Already passing as of 6c2d110. Regression control."
+    },
+    {
+      "id": "M20",
+      "entity": "Emission Statement",
+      "supplied_key": "emissionStatementId",
+      "expect_resolves_to": "Emission Statement ID",
+      "tier": "normalisation",
+      "kind": "camel",
+      "expect_behaviour": "resolve_silently",
+      "note": "Already passing as of 6c2d110. Regression control."
+    },
+    {
+      "id": "M21",
+      "entity": "Emission Statement",
+      "supplied_key": "emission_statement_id",
+      "expect_resolves_to": "Emission Statement ID",
+      "tier": "normalisation",
+      "kind": "snake",
+      "expect_behaviour": "resolve_silently",
+      "note": "Already passing as of 6c2d110. Regression control."
+    },
+    {
+      "id": "M22",
+      "entity": "Emission Statement",
+      "supplied_key": "emission recording method type id",
+      "expect_resolves_to": "Emission Recording Method Type ID",
+      "tier": "normalisation",
+      "kind": "lower_spaced",
+      "expect_behaviour": "resolve_silently",
+      "note": "Already passing as of 6c2d110. Regression control."
+    },
+    {
+      "id": "M23",
+      "entity": "Emission Statement",
+      "supplied_key": "emissionRecordingMethodTypeId",
+      "expect_resolves_to": "Emission Recording Method Type ID",
+      "tier": "normalisation",
+      "kind": "camel",
+      "expect_behaviour": "resolve_silently",
+      "note": "Already passing as of 6c2d110. Regression control."
+    },
+    {
+      "id": "M24",
+      "entity": "Emission Statement",
+      "supplied_key": "emission_recording_method_type_id",
+      "expect_resolves_to": "Emission Recording Method Type ID",
+      "tier": "normalisation",
+      "kind": "snake",
+      "expect_behaviour": "resolve_silently",
+      "note": "Already passing as of 6c2d110. Regression control."
+    },
+    {
+      "id": "M25",
+      "entity": "Emission Statement",
+      "supplied_key": "co2eKg",
+      "expect_resolves_to": "Quantity",
+      "tier": "hard",
+      "kind": "realistic",
+      "rationale": "common developer shorthand",
+      "expect_behaviour": "warn_with_suggestion"
+    },
+    {
+      "id": "M26",
+      "entity": "Emission Statement",
+      "supplied_key": "emissionQuantity",
+      "expect_resolves_to": "Quantity",
+      "tier": "hard",
+      "kind": "realistic",
+      "rationale": "descriptive synonym",
+      "expect_behaviour": "warn_with_suggestion"
+    },
+    {
+      "id": "M27",
+      "entity": "Emission Statement",
+      "supplied_key": "MENGE",
+      "expect_resolves_to": "Quantity",
+      "tier": "expert",
+      "kind": "realistic",
+      "rationale": "SAP field name for quantity",
+      "expect_behaviour": "warn_with_suggestion"
+    },
+    {
+      "id": "M28",
+      "entity": "Emission Statement",
+      "supplied_key": "MEINS",
+      "expect_resolves_to": "Unit Of Measure ID",
+      "tier": "expert",
+      "kind": "realistic",
+      "rationale": "SAP unit of measure",
+      "expect_behaviour": "warn_with_suggestion"
+    },
+    {
+      "id": "M29",
+      "entity": "Emission Statement",
+      "supplied_key": "uom",
+      "expect_resolves_to": "Unit Of Measure ID",
+      "tier": "hard",
+      "kind": "realistic",
+      "rationale": "ubiquitous abbreviation",
+      "expect_behaviour": "warn_with_suggestion"
+    },
+    {
+      "id": "M30",
+      "entity": "Emission Statement",
+      "supplied_key": "unit",
+      "expect_resolves_to": "Unit Of Measure ID",
+      "tier": "hard",
+      "kind": "realistic",
+      "rationale": "bare synonym",
+      "expect_behaviour": "warn_with_suggestion"
+    },
+    {
+      "id": "M31",
+      "entity": "Emission Statement",
+      "supplied_key": "periodStart",
+      "expect_resolves_to": "Valid From Datetime",
+      "tier": "hard",
+      "kind": "realistic",
+      "rationale": "reporting-period synonym",
+      "expect_behaviour": "warn_with_suggestion"
+    },
+    {
+      "id": "M32",
+      "entity": "Emission Statement",
+      "supplied_key": "periodEnd",
+      "expect_resolves_to": "Valid To Datetime",
+      "tier": "hard",
+      "kind": "realistic",
+      "rationale": "reporting-period synonym",
+      "expect_behaviour": "warn_with_suggestion"
+    },
+    {
+      "id": "M33",
+      "entity": "Emission Statement",
+      "supplied_key": "startDate",
+      "expect_resolves_to": "Valid From Datetime",
+      "tier": "hard",
+      "kind": "realistic",
+      "rationale": "generic temporal synonym",
+      "expect_behaviour": "warn_with_suggestion"
+    },
+    {
+      "id": "M34",
+      "entity": "Emission Statement",
+      "supplied_key": "validFrom",
+      "expect_resolves_to": "Valid From Datetime",
+      "tier": "moderate",
+      "kind": "realistic",
+      "rationale": "truncated canonical",
+      "expect_behaviour": "warn_with_suggestion"
+    },
+    {
+      "id": "M35",
+      "entity": "Emission Statement",
+      "supplied_key": "activityId",
+      "expect_resolves_to": "Emission Activity ID",
+      "tier": "moderate",
+      "kind": "realistic",
+      "rationale": "truncated canonical",
+      "expect_behaviour": "warn_with_suggestion"
+    },
+    {
+      "id": "M36",
+      "entity": "Emission Statement",
+      "supplied_key": "emission_activity",
+      "expect_resolves_to": "Emission Activity ID",
+      "tier": "hard",
+      "kind": "realistic",
+      "rationale": "FK suffix dropped",
+      "expect_behaviour": "warn_with_suggestion"
+    },
+    {
+      "id": "M37",
+      "entity": "Emission Statement",
+      "supplied_key": "statementName",
+      "expect_resolves_to": "Name",
+      "tier": "hard",
+      "kind": "realistic",
+      "rationale": "entity-prefixed",
+      "expect_behaviour": "warn_with_suggestion"
+    },
+    {
+      "id": "M38",
+      "entity": "Emission Statement",
+      "supplied_key": "desc",
+      "expect_resolves_to": "Description",
+      "tier": "hard",
+      "kind": "realistic",
+      "rationale": "common truncation",
+      "expect_behaviour": "warn_with_suggestion"
+    },
+    {
+      "id": "M39",
+      "entity": "Emission Statement",
+      "supplied_key": "Emision Statement ID",
+      "expect_resolves_to": "Emission Statement ID",
+      "tier": "moderate",
+      "kind": "realistic",
+      "rationale": "single-char typo",
+      "expect_behaviour": "warn_with_suggestion"
+    },
+    {
+      "id": "M40",
+      "entity": "Emission Statement",
+      "supplied_key": "Emission Statment ID",
+      "expect_resolves_to": "Emission Statement ID",
+      "tier": "moderate",
+      "kind": "realistic",
+      "rationale": "transposition typo",
+      "expect_behaviour": "warn_with_suggestion"
+    },
+    {
+      "id": "M41",
+      "entity": "Emission Statement",
+      "supplied_key": "internal_row_hash",
+      "expect_resolves_to": null,
+      "tier": "control",
+      "kind": "must_not_resolve",
+      "rationale": "pipeline metadata, no canonical counterpart",
+      "expect_behaviour": "warn_without_suggestion"
+    },
+    {
+      "id": "M42",
+      "entity": "Emission Statement",
+      "supplied_key": "__etl_batch_id",
+      "expect_resolves_to": null,
+      "tier": "control",
+      "kind": "must_not_resolve",
+      "rationale": "loader artifact",
+      "expect_behaviour": "warn_without_suggestion"
+    },
+    {
+      "id": "M43",
+      "entity": "Emission Statement",
+      "supplied_key": "customerNotes",
+      "expect_resolves_to": null,
+      "tier": "control",
+      "kind": "must_not_resolve",
+      "rationale": "genuinely foreign business field",
+      "expect_behaviour": "warn_without_suggestion"
+    },
+    {
+      "id": "M44",
+      "entity": "Emission Statement",
+      "supplied_key": "xyzzy",
+      "expect_resolves_to": null,
+      "tier": "control",
+      "kind": "must_not_resolve",
+      "rationale": "nonsense control",
+      "expect_behaviour": "warn_without_suggestion"
+    }
+  ]
+}
