@@ -5,6 +5,19 @@ wrapper over the dVeracity REST API and is also mounted by the backend at
 `https://api.dveracity.com/mcp`; a response-shape change is made in the backend
 and documented here because this package is where agents read the contract.
 
+## 0.5.4 — 2026-09-08
+
+### Fixed
+- Unknown tool arguments are rejected instead of silently stripped. Every tool is
+  now registered from `z.object(shape).strict()` via `registerTool`, so a mistyped
+  key answers `-32602` naming the key rather than running the tool with `{}` —
+  which had inverted answers (`ofp_search_entities {"query": …}` returned the same
+  unfiltered listing as no argument) and could misreport a mistyped `sectorId` on
+  `ofp_validate` as `no_sector_supplied`, a provenance defect in an assurance chain.
+  All 16 published `inputSchema`s now carry `additionalProperties: false`, including
+  the four no-argument tools. Top-level `title` is set natively by `registerTool`.
+  Ported from d-veracity/semantic-mcp#13 (external QA: #11).
+
 ## 0.5.3 — unreleased
 
 Response contract for `ofp_validate` ([semantic-mcp#5](https://github.com/d-veracity/semantic-mcp/issues/5), FR-2 + FR-5).
