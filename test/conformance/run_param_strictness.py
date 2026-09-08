@@ -139,7 +139,14 @@ if INCLUDE_PAID:
     v = corpus["cases"][0]
     base = {"entity": v["entity"], "domain": v.get("domain"), "payload": v["payload"]}
     _, nm = call(c["tool"], {**base, c["near_miss_arg"]: c["value"]})
-    pol = (nm.get("data") or {}).get("policy") or {}
+    # #11's fix makes the SDK reject unknown keys before a handler runs, so a
+    # rejected call surfaces as an isError:true result whose content is text,
+    # not a dict shaped like a successful ofp_validate response. call() then
+    # returns that text as a plain str, and this line must not assume dict
+    # (was: AttributeError: 'str' object has no attribute 'get', reported on
+    # #11 against the fix/11-parameter-strictness branch). No policy object at
+    # all is itself evidence the misattribution cannot occur, so treat it as {}.
+    pol = (nm.get("data") or {}).get("policy") or {} if isinstance(nm, dict) else {}
     misattributed = pol.get("reason") == "no_sector_supplied"
     results["P4"] = {"reason": pol.get("reason"), "misattributed": misattributed,
                      "pass": not misattributed}
