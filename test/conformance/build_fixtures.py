@@ -86,13 +86,29 @@ probe = {
     ),
     "base_payload": BASE,
     "cases": [
+        # Ported verbatim from the sealed artifact. QA rewrote E1 when Q2 was
+        # decided (semantic-mcp#2, 2026-09-07) and replaced `blocked_by` with an
+        # explicit accepted-red status, but the generator was never updated, so
+        # it had drifted from the file it generates: regenerating silently
+        # un-decided E1. This commit changes no fixture byte.
         {"id": "E1", "ac": "AC-3.1", "name": "negative quantity",
          "patch": {"Quantity": -999999},
          "expect_rule": "value_range", "expect_field": "Quantity",
-         "model_basis": "Quantity is numeric; a negative mass of emissions is "
-                        "physically impossible. Model declares constraints:null, "
-                        "which is why this is currently missed.",
-         "blocked_by": "Q2 — confirm which fields permit negatives"},
+         "model_basis": "Q2 decided 2026-09-07 (#2): removals are POSITIVE "
+                        "quantities of a Sink, per ISO 14064-1. No field permits "
+                        "negatives. But sign is a consequence of the linked "
+                        "activity's Emission Inventory Type, and a single-payload "
+                        "validator cannot resolve Emission Statement -> Emission "
+                        "Activity -> Emission Inventory Type. Phase 0 therefore "
+                        "emits a WARNING, not a violation.",
+         "expect_severity": "warning",
+         "status": "accepted-red",
+         "accepted_red_reason": "Blocked on openfootprint model change: Emission "
+                                "Inventory Type ID must become required on "
+                                "Emission Activity, then Quantity gains "
+                                "minimum:0. Until then this stays red BY "
+                                "DECISION. It is not a defect and must not be "
+                                "treated as a regression."},
         {"id": "E2", "ac": "AC-1.5b", "name": "invalid unit, canonical key",
          "patch": {"Unit Of Measure ID": "bananas"},
          "expect_rule": "pattern_mismatch", "expect_field": "Unit Of Measure ID",
@@ -149,7 +165,9 @@ probe = {
                         "field names and satisfies every declared constraint."},
     ],
 }
-(OUT / "01-semantic-error-probe.json").write_text(json.dumps(probe, indent=2))
+# The sealed 01 carries a trailing newline (QA's edit); 02 and 03 do not.
+# Reproduce each artifact byte-for-byte rather than normalising the seal.
+(OUT / "01-semantic-error-probe.json").write_text(json.dumps(probe, indent=2) + "\n")
 
 # ---------------------------------------------------------------- fixture 2
 # Mis-mapped keys. All 50 target REAL canonical fields taken from the model.
