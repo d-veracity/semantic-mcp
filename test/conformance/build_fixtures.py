@@ -6,10 +6,17 @@ validator's own behaviour. Expected outcomes are derived from what the model
 declares, so the fixtures remain valid if the validator changes.
 """
 import json
+import os
 import pathlib
 import re
 
-OFP = pathlib.Path("/tmp/ofp/cicd/generated/entity-index.json")
+# The model source of truth. Overridable so a reviewer can regenerate against a
+# specific openfootprint commit without first copying it into /tmp:
+#   OFP_ENTITY_INDEX=.../openfootprint/cicd/generated/entity-index.json \
+#       python3 build_fixtures.py
+OFP = pathlib.Path(
+    os.environ.get("OFP_ENTITY_INDEX", "/tmp/ofp/cicd/generated/entity-index.json")
+)
 OUT = pathlib.Path(__file__).parent / "fixtures"
 OUT.mkdir(exist_ok=True)
 
@@ -44,13 +51,52 @@ for e in ENTS:
 ES = [e for e in ENTS if e["name"] == "Emission Statement"][0]
 ES_FIELDS = {f["name"]: f for f in ES["fields"]}
 
+# Stands in for a natural key where the vocabulary publishes no members. See
+# key_for() for why this is no longer safe everywhere it used to be.
+PLACEHOLDER_KEY = "X-001"
 
-def id_for(pattern, key="X-001"):
+
+def id_for(pattern, key=PLACEHOLDER_KEY):
     """Build a value satisfying a canonical FK pattern."""
     m = re.search(r"([a-z\-]+-data)\\-\\-(\w+)", pattern or "")
     if not m:
         return None
     return f"dveracity:{m.group(1)}--{m.group(2)}:{key}:1"
+
+
+def key_for(field):
+    r"""The natural key to plant in a generated FK id.
+
+    PLACEHOLDER_KEY satisfies the pattern's `.+` key slot and nothing more: the
+    declared grammar for a reference-data FK is
+
+        ^[\w\-\.]+:reference-data\-\-<Entity>:.+:[0-9]*$
+
+    so any token is well-formed. openfootprint#50 changed that, by publishing
+    each vocabulary's members as `field.referenceMembers = {entity, keys}`.
+    Against a published vocabulary the placeholder is now a NON-MEMBER: the id
+    is well-formed but its referent does not exist, which is precisely what
+    probe E6 asserts. Left as it was, the base payload would be rejected by
+    enum_membership and every case built on it — all 9 probes, all 44
+    mismapping cases and all 8 valid-corpus payloads — would turn into false
+    positives, breaking the regression gate on the valid corpus and firing a
+    negative test (N2).
+
+    Where no members are published the placeholder stays, deliberately. Absence
+    of `referenceMembers` means the vocabulary is not published, not that any
+    referent is acceptable (index `usage.referenceMembers`), so the fixture must
+    not invent a member for it. EmissionComponent and UnitOfMeasure are in that
+    position today and keep PLACEHOLDER_KEY.
+
+    `keys` is sorted at source, so keys[0] is deterministic across regenerations.
+    For EmissionRecordingMethodType that is CALCULATED — a member, and apt for a
+    purchased-electricity payload, which is activity data times a factor rather
+    than a meter reading. QA may prefer to pin MEASURED, the dominant real key
+    (131,922 of the 132,019 deployed statements that carry one); that is a one-line change here and
+    nothing else in the suite depends on which member is chosen.
+    """
+    keys = (field.get("referenceMembers") or {}).get("keys") or []
+    return keys[0] if keys else PLACEHOLDER_KEY
 
 
 BASE = {}
@@ -59,7 +105,7 @@ for name, f in ES_FIELDS.items():
         continue
     c = f.get("constraints") or {}
     if c.get("pattern"):
-        v = id_for(c["pattern"])
+        v = id_for(c["pattern"], key=key_for(f))
         if v:
             BASE[name] = v
     elif name == "Name":

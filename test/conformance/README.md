@@ -212,6 +212,71 @@ run that reports E1 as undetected is behaving correctly.
 This is the distinction the suite exists to preserve: **a check that was not run is not the
 same as a check that passed**, and neither is a defect.
 
+## Re-cut: reference-data members in the base payload (openfootprint#50)
+
+**Stated reason, as the governance above requires.** `openfootprint#50` publishes
+each reference-data vocabulary's members on the entity index as
+`field.referenceMembers = {entity, keys}`, extracted read-only from the deployed
+`open_footprint` database. The base payload's `Emission Recording Method Type ID`
+carried the placeholder key `X-001`, which satisfies the declared pattern's `.+`
+key slot but is **not a member** of that vocabulary — structurally the same
+defect probe E6 plants on purpose. Once `enum_membership` is enforced the base
+payload is invalid, so all 9 probes, all 44 mismapping cases and all 8
+valid-corpus payloads inherit a false positive: the gate fails on the valid
+corpus and negative test N2 fires.
+
+The re-cut substitutes a real member on that one field:
+
+| Field | Before | After |
+|---|---|---|
+| `Emission Recording Method Type ID` | `…EmissionRecordingMethodType:X-001:1` | `…EmissionRecordingMethodType:CALCULATED:1` |
+
+E6 is unchanged and stays the non-member: `…EmissionRecordingMethodType:scope9:1`.
+Its `expect_rule: enum_membership` is now derived from a model declaration rather
+than asserted against the model's silence, which is what this suite is for.
+
+**What deliberately did not change.** `Emission Component ID` and
+`Unit Of Measure ID` are reference-data FKs and still carry `X-001`. Their
+vocabularies publish no members, and absence means *not published*, never *any
+referent acceptable* (index `usage.referenceMembers`). Inventing a member for
+them would be the fixture guessing at the standard. They pick up real members by
+regeneration alone once their vocabularies are published.
+
+**Which member.** `keys[0]` of the published, sorted set — deterministic across
+regenerations. For `EmissionRecordingMethodType` that is `CALCULATED`, which also
+suits a purchased-electricity payload (activity data times a factor, not a meter
+reading). `MEASURED` is the dominant deployed key (131,922 of the 132,019
+statements that carry one); if QA prefers it, `key_for()` is the one place to pin
+it and no expectation moves.
+
+**`04-parameter-strictness.json` needs no re-cut, and was checked rather than
+assumed.** Two placeholders remain, both in P1's inline `valid` argument sets for
+`validate_data` and `ofp_validate`. `run_rejection()` only ever sends those with
+`junk_key` appended and asserts `isError` plus the key being named, so the
+payload's value semantics are never observed and a non-member referent is inert
+there. P4 — the one case that does assert on a validation response — builds its
+payload from `03-valid-payload-corpus.json` case V1 at runtime, so it inherits
+this re-cut automatically. If QA nonetheless wants the canonical payload to read
+as canonical in all four fixtures, it is the same two-line substitution; it is
+flagged rather than made because nothing forces it.
+
+**Regenerating.** `build_fixtures.py` now reads the model index path from
+`OFP_ENTITY_INDEX` (default unchanged), so a reviewer can reproduce this diff
+without staging files in `/tmp`:
+
+```bash
+OFP_ENTITY_INDEX=<openfootprint>/cicd/generated/entity-index.json \
+    python3 build_fixtures.py
+```
+
+**Sequencing — this must land with the dVE `enum_membership` implementation.**
+Merged first it is inert: the deployed validator does not check membership, so a
+real member and a placeholder behave identically and the suite stays green.
+Merged second, the gate is red in between.
+
+**Cost.** Opening this PR runs `conformance.yml` (~19 credits) plus the
+parameter-strictness suite (~3).
+
 ## Accepted-red: parameter strictness (suite 04)
 
 `run_param_strictness.py` is a second, separate suite covering
