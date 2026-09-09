@@ -6,10 +6,17 @@ validator's own behaviour. Expected outcomes are derived from what the model
 declares, so the fixtures remain valid if the validator changes.
 """
 import json
+import os
 import pathlib
 import re
 
-OFP = pathlib.Path("/tmp/ofp/cicd/generated/entity-index.json")
+# The model source of truth. Overridable so a reviewer can regenerate against a
+# specific openfootprint commit without first copying it into /tmp:
+#   OFP_ENTITY_INDEX=.../openfootprint/cicd/generated/entity-index.json \
+#       python3 build_fixtures.py
+OFP = pathlib.Path(
+    os.environ.get("OFP_ENTITY_INDEX", "/tmp/ofp/cicd/generated/entity-index.json")
+)
 OUT = pathlib.Path(__file__).parent / "fixtures"
 OUT.mkdir(exist_ok=True)
 
@@ -44,13 +51,52 @@ for e in ENTS:
 ES = [e for e in ENTS if e["name"] == "Emission Statement"][0]
 ES_FIELDS = {f["name"]: f for f in ES["fields"]}
 
+# Stands in for a natural key where the vocabulary publishes no members. See
+# key_for() for why this is no longer safe everywhere it used to be.
+PLACEHOLDER_KEY = "X-001"
 
-def id_for(pattern, key="X-001"):
+
+def id_for(pattern, key=PLACEHOLDER_KEY):
     """Build a value satisfying a canonical FK pattern."""
     m = re.search(r"([a-z\-]+-data)\\-\\-(\w+)", pattern or "")
     if not m:
         return None
     return f"dveracity:{m.group(1)}--{m.group(2)}:{key}:1"
+
+
+def key_for(field):
+    r"""The natural key to plant in a generated FK id.
+
+    PLACEHOLDER_KEY satisfies the pattern's `.+` key slot and nothing more: the
+    declared grammar for a reference-data FK is
+
+        ^[\w\-\.]+:reference-data\-\-<Entity>:.+:[0-9]*$
+
+    so any token is well-formed. openfootprint#50 changed that, by publishing
+    each vocabulary's members as `field.referenceMembers = {entity, keys}`.
+    Against a published vocabulary the placeholder is now a NON-MEMBER: the id
+    is well-formed but its referent does not exist, which is precisely what
+    probe E6 asserts. Left as it was, the base payload would be rejected by
+    enum_membership and every case built on it — all 9 probes, all 44
+    mismapping cases and all 8 valid-corpus payloads — would turn into false
+    positives, breaking the regression gate on the valid corpus and firing a
+    negative test (N2).
+
+    Where no members are published the placeholder stays, deliberately. Absence
+    of `referenceMembers` means the vocabulary is not published, not that any
+    referent is acceptable (index `usage.referenceMembers`), so the fixture must
+    not invent a member for it. EmissionComponent and UnitOfMeasure are in that
+    position today and keep PLACEHOLDER_KEY.
+
+    `keys` is sorted at source, so keys[0] is deterministic across regenerations.
+    For EmissionRecordingMethodType that is CALCULATED — a member, and apt for a
+    purchased-electricity payload, which is activity data times a factor rather
+    than a meter reading. QA may prefer to pin MEASURED, the dominant real key
+    (131,922 of the 132,019 deployed statements that carry one); that is a one-line change here and
+    nothing else in the suite depends on which member is chosen.
+    """
+    keys = (field.get("referenceMembers") or {}).get("keys") or []
+    return keys[0] if keys else PLACEHOLDER_KEY
 
 
 BASE = {}
@@ -59,7 +105,7 @@ for name, f in ES_FIELDS.items():
         continue
     c = f.get("constraints") or {}
     if c.get("pattern"):
-        v = id_for(c["pattern"])
+        v = id_for(c["pattern"], key=key_for(f))
         if v:
             BASE[name] = v
     elif name == "Name":
@@ -86,13 +132,29 @@ probe = {
     ),
     "base_payload": BASE,
     "cases": [
+        # Ported verbatim from the sealed artifact. QA rewrote E1 when Q2 was
+        # decided (semantic-mcp#2, 2026-09-07) and replaced `blocked_by` with an
+        # explicit accepted-red status, but the generator was never updated, so
+        # it had drifted from the file it generates: regenerating silently
+        # un-decided E1. This commit changes no fixture byte.
         {"id": "E1", "ac": "AC-3.1", "name": "negative quantity",
          "patch": {"Quantity": -999999},
          "expect_rule": "value_range", "expect_field": "Quantity",
-         "model_basis": "Quantity is numeric; a negative mass of emissions is "
-                        "physically impossible. Model declares constraints:null, "
-                        "which is why this is currently missed.",
-         "blocked_by": "Q2 — confirm which fields permit negatives"},
+         "model_basis": "Q2 decided 2026-09-07 (#2): removals are POSITIVE "
+                        "quantities of a Sink, per ISO 14064-1. No field permits "
+                        "negatives. But sign is a consequence of the linked "
+                        "activity's Emission Inventory Type, and a single-payload "
+                        "validator cannot resolve Emission Statement -> Emission "
+                        "Activity -> Emission Inventory Type. Phase 0 therefore "
+                        "emits a WARNING, not a violation.",
+         "expect_severity": "warning",
+         "status": "accepted-red",
+         "accepted_red_reason": "Blocked on openfootprint model change: Emission "
+                                "Inventory Type ID must become required on "
+                                "Emission Activity, then Quantity gains "
+                                "minimum:0. Until then this stays red BY "
+                                "DECISION. It is not a defect and must not be "
+                                "treated as a regression."},
         {"id": "E2", "ac": "AC-1.5b", "name": "invalid unit, canonical key",
          "patch": {"Unit Of Measure ID": "bananas"},
          "expect_rule": "pattern_mismatch", "expect_field": "Unit Of Measure ID",
@@ -149,7 +211,9 @@ probe = {
                         "field names and satisfies every declared constraint."},
     ],
 }
-(OUT / "01-semantic-error-probe.json").write_text(json.dumps(probe, indent=2))
+# The sealed 01 carries a trailing newline (QA's edit); 02 and 03 do not.
+# Reproduce each artifact byte-for-byte rather than normalising the seal.
+(OUT / "01-semantic-error-probe.json").write_text(json.dumps(probe, indent=2) + "\n")
 
 # ---------------------------------------------------------------- fixture 2
 # Mis-mapped keys. All 50 target REAL canonical fields taken from the model.
