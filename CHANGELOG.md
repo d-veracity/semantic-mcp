@@ -5,6 +5,54 @@ wrapper over the dVeracity REST API and is also mounted by the backend at
 `https://api.dveracity.com/mcp`; a response-shape change is made in the backend
 and documented here because this package is where agents read the contract.
 
+## 0.5.5 — unreleased
+
+The `ofp_validate` tool description had gone stale: it still told agents that
+temporal consistency was not checked, three releases after it was. A tool
+description is the only thing an agent reads before deciding what a result
+means, so a stale one understates the product to exactly the audience the
+product is for. This release resynchronises the description, the README and the
+package with what the validator actually does, in one bump rather than three.
+
+### Changed
+
+- **`ofp_validate` description now matches the deployed checks.** It moves
+  `temporal_consistency` and `enum_membership` out of "what it does not check"
+  and into "what it checks", narrows the `referential_integrity` caveat to what
+  is still true (keys are pattern- and member-checked, never resolved against
+  live records), and lists the full `checks_not_run` reason vocabulary:
+  `not_implemented`, `no_data_plane`, `no_range_declared`, `no_numeric_fields`,
+  `no_validity_pair`, `no_members_published`, `no_reference_field_supplied`,
+  `schema_not_run`, `no_sector_supplied`, `no_policy_published`,
+  `not_applicable`, `unevaluable`.
+- The description and README now also cover `didYouMean` on `unknown_field`
+  warnings, `schema.normalisations`, and the `advisories` array. None of these
+  are new in this release; all three shipped without the description following.
+
+### Server-side changes this description now reflects
+
+These landed in the API (`POST /api/v1/ofp/validate`) and are live; the package
+carries no logic of its own for them.
+
+- `temporal_consistency` — a validity period whose end precedes its start is
+  rejected, and datetime granularity is compared across the pair
+  ([semantic-mcp#7](https://github.com/d-veracity/semantic-mcp/issues/7), probe E3/E4).
+- `enum_membership` — a foreign key into a vocabulary that publishes its members
+  is checked against that set, so a well-formed identifier for a referent that
+  does not exist is caught (semantic-mcp#7, probe E6).
+- `didYouMean` and `schema.normalisations` on unknown fields
+  ([semantic-mcp#6](https://github.com/d-veracity/semantic-mcp/issues/6)).
+- `advisories` with `deprecated_field`, severity `warning`, naming a `successor`
+  only where the model names one
+  ([semantic-mcp#8](https://github.com/d-veracity/semantic-mcp/issues/8), probe E7).
+
+### Fixed
+
+- `test/tools.test.js` was on the public mirror only. Its `lib/tools.js` change
+  shipped here as 0.5.4, but the test that guards it did not come with it, so
+  the next monorepo→mirror sync would have deleted it. Ported, per the drift
+  check in `PUBLISHING.md`.
+
 ## 0.5.4 — 2026-09-08
 
 ### Fixed
