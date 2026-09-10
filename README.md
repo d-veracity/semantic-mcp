@@ -122,16 +122,20 @@ catalogue in two lists: `checked` (what ran) and `checks_not_run` (what did not,
 each with a `reason` and usually a `detail`). Read both before describing a
 payload as anything.
 
-| Check | Status in 0.5.x | Reason reported |
+| Check | Status in 0.5.5 | Reason reported when it does not run |
 |---|---|---|
-| `schema` — presence, primary key, types, declared constraints | runs | — |
-| `value_range` | not run: the model declares no numeric range on any field | `no_range_declared` |
+| `schema` — presence, primary key, types, declared constraints | runs | `entity_has_no_fields` |
+| `value_range` | not run: the model declares no numeric range on any field | `no_range_declared`, `no_numeric_fields` |
 | `unit_coherence` | not run | `not_implemented` |
-| `temporal_consistency` | not run: an inverted validity period passes | `not_implemented` |
-| `referential_integrity` | not run: foreign keys are pattern-checked, never resolved | `no_data_plane` |
+| `temporal_consistency` | **runs**: a validity period whose end precedes its start is rejected | `no_validity_pair` |
+| `enum_membership` | **runs** where the vocabulary publishes its members: a well-formed key for a referent that does not exist is rejected | `no_members_published`, `no_reference_field_supplied` |
+| `referential_integrity` | not run: keys are pattern- and member-checked, never resolved against live records | `no_data_plane` |
 | `factor_provenance` | not run | `not_implemented` |
 | `materiality` | not run | `not_implemented` |
 | `sector_policy` | runs when a sector with published guardrails covers the record type | `no_sector_supplied`, `no_policy_published`, `not_applicable`, `unevaluable` |
+
+Any check can also report `schema_not_run`, which means the structural check it
+builds on could not run at all.
 
 - `schemaValid` is the structural verdict (`null` if the structural check could not run).
 - `assuranceLevel` names the depth earned: `schema-only`, `schema-and-value`,
@@ -139,8 +143,19 @@ payload as anything.
   so guardrails without a value check is still `schema-only`.
 - Every violation and warning carries `severity` (`error` | `warning`). Rule ids
   are stable: `required_field_missing`, `pattern_mismatch`, `format_mismatch`,
-  `type_mismatch`, `primary_key_missing`, `enum_violation`, … `unknown_field` is a
-  per-field warning and stays one.
+  `type_mismatch`, `primary_key_missing`, `enum_violation`, `temporal_consistency`,
+  `enum_membership`, … `unknown_field` is a per-field warning and stays one.
+- `unknown_field` warnings carry `didYouMean`: up to three canonical candidates,
+  each with a confidence and the O-DEF code that field carries. The list is empty
+  when nothing in the model is a plausible match — a key that belongs to another
+  system stays a key that belongs to another system. `schema.normalisations`
+  separately discloses keys that resolved through case and separator folding.
+- `advisories` carries findings that are true of the payload but do not bear on
+  its validity. Today that is `deprecated_field`: a field the model has retired,
+  severity `warning`, carrying `modelDescription` verbatim and a `successor` when
+  the model names one. Where the model names no replacement the key is absent
+  rather than guessed. An advisory never changes `schemaValid`, and the same
+  entries also appear in `schema.warnings`.
 - `valid` is **deprecated** (see `deprecations` in the response). It keeps its
   0.5.0 meaning through the 0.5.x line and is removed no earlier than 0.6.0.
   Read `schemaValid` instead.
