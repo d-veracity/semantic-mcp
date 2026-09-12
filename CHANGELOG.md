@@ -5,7 +5,74 @@ wrapper over the dVeracity REST API and is also mounted by the backend at
 `https://api.dveracity.com/mcp`; a response-shape change is made in the backend
 and documented here because this package is where agents read the contract.
 
-## 0.5.5 — unreleased
+## 0.5.6 — 2026-09-11
+
+The `ofp_validate` description went stale the same way, and in the same
+sentence, as the one 0.5.5 fixed — one release later. dVE #238 made
+`value_range` run for the first time, because openfootprint#53 gave the model
+its first declared numeric bound. The description still told agents the
+opposite: "WHAT IT DOES NOT CHECK in this release: value ranges (the model
+declares none, so a negative quantity passes)". A negative quantity is now
+rejected. That is worse than a merely outdated sentence, because the example it
+gave is the first thing an agent would try.
+
+### Changed
+
+- **`ofp_validate` description now matches the deployed checks.** Value ranges
+  move out of "what it does not check" into "what it checks", scoped to where
+  they actually run: a bound is enforced where the model declares one, and
+  exactly one field in the model declares one today. The "does not check" half
+  keeps the residue that is still true — a field whose model declares no bound
+  still passes an out-of-range quantity, reported per call as
+  `no_range_declared` or `no_numeric_fields`. Neither half claims more than the
+  response reports, so the instruction to read `checked` stays load-bearing.
+- The README check table follows, and its `value_range` row now reads like the
+  rows for the other checks that run. `value_range` also joins the rule-id
+  list: a breach is reported as `rule: "value_range"` with `bound` as the
+  discriminator (`minimum` | `maximum`), not under two private rule names of
+  its own — which is what made it unmatchable before.
+
+### Server-side changes this description now reflects
+
+These are live in the API (`POST /api/v1/ofp/validate`); this package carries no
+logic of its own for them.
+
+- `value_range` runs where the vendored model declares a bound. The bound is
+  the model's own, declared in
+  [openfootprint#53](https://github.com/d-veracity/openfootprint/pull/53) and
+  vendored here as `8f48698`; dVE
+  [#238](https://github.com/d-veracity/dVE/pull/238) made the validator emit it
+  under the catalogue's own name. Reported as defect 1 of
+  [openfootprint#48](https://github.com/d-veracity/openfootprint/issues/48),
+  probe E1. The sealed conformance suite went from `6/7 detected` to `7/7
+  detected` against the deployed endpoint, with the 44/44 mismapped and 8/8
+  corpus tiers unchanged.
+- `assuranceLevel` is no longer pinned to `schema-only`. Every level above it
+  requires `value_range` in `checked`, which never happened before, so
+  `schema-and-value` and `schema-value-and-policy` were both unreachable.
+  `schema-and-value` is confirmed returned on an `Emission Statement`. No level
+  changed meaning.
+- `deprecated_field` advisories read the model's own `deprecated` /
+  `supersededBy` markers wherever the index carries them, and say which they
+  used via `basis` (`model_marker` | `model_description`). Scanning the
+  description prose remains the fallback for an index that predates the marker.
+  The advisory set did not change: across the 29 entities that carry a
+  deprecated field, the marker yields the same fields prose did — zero
+  symmetric difference over all 813 of their fields — and it resolves 18
+  successors where prose resolved 16: 12 the same, 4 more, none lost.
+
+### Fixed
+
+- `PUBLISHING.md` told the next publisher to expect `13/13`. The suite has been
+  35 tests since `test/tools.test.js` was ported in 0.5.5. It also omitted the
+  `npm install` this package needs inside the monorepo, without which six tests
+  fail on Zod/SDK internals and look like real breakage. Both corrected, with
+  the failure signatures written down so they are recognisable next time.
+- Two CHANGELOG headings still read "unreleased" for versions npm published on
+  2026-09-07 (0.5.3) and 2026-09-10 (0.5.5). Dated from npm's own publish
+  times.
+
+## 0.5.5 — 2026-09-10
 
 The `ofp_validate` tool description had gone stale: it still told agents that
 temporal consistency was not checked, three releases after it was. A tool
@@ -66,7 +133,7 @@ carries no logic of its own for them.
   the four no-argument tools. Top-level `title` is set natively by `registerTool`.
   Ported from d-veracity/semantic-mcp#13 (external QA: #11).
 
-## 0.5.3 — unreleased
+## 0.5.3 — 2026-09-07
 
 Response contract for `ofp_validate` ([semantic-mcp#5](https://github.com/d-veracity/semantic-mcp/issues/5), FR-2 + FR-5).
 Absence of a check must never read as a pass.
