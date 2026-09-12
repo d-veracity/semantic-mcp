@@ -1,0 +1,121 @@
+name: Publish to npm
+
+# Why this workflow lives HERE and not in d-veracity/dVE
+# ------------------------------------------------------
+# npm trusted publishing requires package.json's `repository.url` to match the
+# repository the publish runs from, and this package declares
+# git+https://github.com/d-veracity/semantic-mcp.git -- this repo. A publish run
+# from the dVE monorepo fails that check. This is also the only place provenance
+# can work at all: npm generates attestations for public repositories only, and
+# dVE is private.
+#
+# CONSEQUENCE FOR THE RELEASE CHAIN: the mirror sync now has to happen BEFORE
+# the npm publish, not after it. The tag is cut on this repo's synced main.
+# See mcp/semantic-mcp/PUBLISHING.md in dVE for the reordered steps.
+#
+# No token is involved. GitHub mints a short-lived OIDC token for this workflow
+# run and npm exchanges it, because npmjs.com has this repo AND this filename
+# registered as a trusted publisher for @dveracity/semantic-mcp. That
+# registration is an interactive 2FA action on the website and cannot be done
+# from CI. If it is missing, or if this file is renamed without updating the
+# npmjs.com entry, the publish fails with ENEEDAUTH -- the filename match is
+# exact and case-sensitive.
+#
+# Requires npm >= 11.5.1 and Node >= 22.14.0; the guard step below enforces it.
+# For reference the maintainer's machine has npm 10.8.2 / Node 20.20.1, so
+# local `npm publish` can never use this path -- which is the point.
+
+on:
+  push:
+    tags: ["v*"]
+  workflow_dispatch:
+
+# One publish at a time. Never cancel a publish in flight: a half-completed
+# registry write is worse than a queued one.
+concurrency:
+  group: npm-publish
+  cancel-in-progress: false
+
+permissions:
+  id-token: write # OIDC. Without this npm cannot authenticate and you get ENEEDAUTH.
+  contents: read
+
+jobs:
+  publish:
+    # GitHub-hosted runners only. npm does not support self-hosted runners for
+    # trusted publishing, so do not "optimise" this onto one.
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          # node-test.yml runs Node 20, which is fine for tests but BELOW the
+          # trusted-publishing floor (Node 22.14.0 / npm 11.5.1). Do not align
+          # these two jobs on the older version.
+          node-version: 24
+          registry-url: "https://registry.npmjs.org"
+          # No `cache: npm`, and `npm install` below rather than `npm ci`: this
+          # package has no package-lock.json (it is gitignored), and both the
+          # cache and `ci` refuse to run without one. Same reason node-test.yml
+          # gives.
+
+      - name: Guard the toolchain is new enough for OIDC
+        run: |
+          set -euo pipefail
+          node -e '
+            const { execFileSync } = require("child_process");
+            const nodeVersion = process.versions.node;
+            const npmVersion = execFileSync("npm", ["--version"]).toString().trim();
+            const atLeast = (have, want) => {
+              const a = have.split(".").map(Number), b = want.split(".").map(Number);
+              for (let i = 0; i < 3; i++) {
+                if ((a[i] || 0) > (b[i] || 0)) return true;
+                if ((a[i] || 0) < (b[i] || 0)) return false;
+              }
+              return true;
+            };
+            let bad = false;
+            if (!atLeast(nodeVersion, "22.14.0")) { console.error("::error::Node " + nodeVersion + " is below 22.14.0, the floor for npm trusted publishing"); bad = true; }
+            if (!atLeast(npmVersion, "11.5.1"))  { console.error("::error::npm " + npmVersion + " is below 11.5.1, the floor for npm trusted publishing"); bad = true; }
+            if (bad) process.exit(1);
+            console.log("toolchain OK: node " + nodeVersion + ", npm " + npmVersion);
+          '
+
+      # The version has to be bumped in THREE places (package.json, server.json
+      # top level, server.json packages[0]) before a release, and that has been
+      # forgotten before. Failing here is free; publishing a package whose
+      # registry metadata disagrees with it is not.
+      - name: Guard version consistency across package.json, server.json and the tag
+        run: |
+          set -euo pipefail
+          PKG="$(node -p "require('./package.json').version")"
+          SRV="$(node -p "require('./server.json').version")"
+          SRVPKG="$(node -p "require('./server.json').packages[0].version")"
+
+          if [ "$PKG" != "$SRV" ] || [ "$PKG" != "$SRVPKG" ]; then
+            echo "::error::version mismatch: package.json=$PKG server.json=$SRV server.json.packages[0]=$SRVPKG"
+            exit 1
+          fi
+
+          # On a tag push the tag must name that same version. A manual dispatch
+          # has no tag to compare, so it publishes whatever main declares -- npm
+          # will reject it with E403 if that version already exists, which is the
+          # correct failure.
+          if [ "${GITHUB_EVENT_NAME}" = "push" ] && [ "${GITHUB_REF_NAME}" != "v$PKG" ]; then
+            echo "::error::tag ${GITHUB_REF_NAME} does not match package.json version ${PKG} (expected v${PKG})"
+            exit 1
+          fi
+
+          echo "version ${PKG} is consistent across package.json, server.json and the ref"
+
+      # Unit tests only. Deliberately NOT conformance.yml: that suite hits the
+      # DEPLOYED endpoint, which is still the previous version at this point in
+      # the chain, and it costs credits. node-test.yml explains that trap.
+      - run: npm install --no-audit --no-fund
+      - run: npm test
+
+      # No --provenance flag: trusted publishing generates the attestation
+      # automatically, and this repo is public so the conditions are met.
+      # No NODE_AUTH_TOKEN: supplying one would defeat the purpose.
+      - run: npm publish
