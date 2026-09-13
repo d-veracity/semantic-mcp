@@ -3,7 +3,7 @@
   "name": "com.dveracity/semantic-mcp",
   "title": "dVeracity Semantic API",
   "description": "Natural-language queries over a verified emissions knowledge graph, plus standards validation",
-  "version": "0.5.5",
+  "version": "0.5.6",
   "websiteUrl": "https://dveracity.com/semantic-api",
   "repository": {
     "url": "https://github.com/d-veracity/semantic-mcp",
@@ -13,7 +13,7 @@
     {
       "registryType": "npm",
       "identifier": "@dveracity/semantic-mcp",
-      "version": "0.5.5",
+      "version": "0.5.6",
       "transport": {
         "type": "stdio"
       },
