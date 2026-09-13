@@ -122,7 +122,7 @@ catalogue in two lists: `checked` (what ran) and `checks_not_run` (what did not,
 each with a `reason` and usually a `detail`). Read both before describing a
 payload as anything.
 
-| Check | Status in 0.5.6 | Reason reported when it does not run |
+| Check | Status in 0.5.7 | Reason reported when it does not run |
 |---|---|---|
 | `schema` — presence, primary key, types, declared constraints | runs | `entity_has_no_fields` |
 | `value_range` | **runs** where the model declares a bound: a quantity outside the declared minimum or maximum is rejected. One field in the model declares a bound today, so it fires only there | `no_range_declared`, `no_numeric_fields` |

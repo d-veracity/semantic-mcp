@@ -5,6 +5,39 @@ wrapper over the dVeracity REST API and is also mounted by the backend at
 `https://api.dveracity.com/mcp`; a response-shape change is made in the backend
 and documented here because this package is where agents read the contract.
 
+## 0.5.7 — 2026-09-13
+
+No runtime change: `index.js` and the three files under `lib/` are
+byte-identical to 0.5.6, sha256-checked against the published tarball. This
+release exists because the previous one could not have been published again the
+same way.
+
+`scripts.test` was `node --test test/`, and Node's test runner only recurses
+into a directory argument on Node 20. On Node 24 it treats it as a module path,
+looks for `test/index.js`, and fails with `MODULE_NOT_FOUND`. The mirror's CI
+pins Node 20, so the script stayed green across five releases — while
+`publish.yml` has to run Node 24, the only LTS line whose bundled npm clears
+the OIDC floor of 11.5.1. The break surfaced in a dry run of npm's OIDC
+trusted publishing rather than mid-release, which is what the dry run is for:
+dispatching `publish.yml` at a version already on the registry makes
+`npm publish` fail with E403 on the duplicate, after the workflow has already
+proved it can reach the registry.
+
+### Changed
+
+- **`scripts.test` is now `node --test test/*.test.js`.** The shell expands the
+  glob, so one script works on Node 20 and Node 24 alike. Same five files, same
+  35 tests, all passing. `test/conformance/` holds only `.md`, `.json` and
+  `.py`, so the narrower glob skips nothing.
+- **First release published through npm trusted publishing (OIDC),** replacing
+  an automation token typed into a pseudo-terminal. Provenance is now recorded
+  automatically, and there is no long-lived token left to leak, expire, or
+  demand a browser 2FA challenge in CI.
+- **README's check-catalogue heading is stamped 0.5.7.** The table underneath
+  is unchanged, because the behaviour it describes is unchanged; it is shipped
+  in the tarball, and a superseded release number in a heading is exactly the
+  kind of claim that reads as stale the moment the version is bumped.
+
 ## 0.5.6 — 2026-09-11
 
 The `ofp_validate` description went stale the same way, and in the same
