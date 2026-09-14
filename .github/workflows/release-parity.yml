@@ -1,0 +1,74 @@
+name: Release parity
+
+# Why this exists
+# ---------------
+# Of the six release steps in dVE's mcp/semantic-mcp/PUBLISHING.md, only step 4
+# (tag -> publish.yml -> npm) is automated. Steps 1-3, 5 and 6 are human, and
+# nothing used to notice a release that reached npm but never reached the
+# official MCP registry: `mcp-publisher publish` prints "Successfully published"
+# even when a field was silently dropped, and skipping step 5 entirely leaves
+# every agent discovering us through the registry on the previous version.
+#
+# This job compares the two public sources of truth and goes red when they
+# disagree. Both endpoints are public, so it needs no secrets and no OIDC.
+# Nightly, because the registry's search listing propagates minutes after a
+# publish and an immediate post-tag check would fail on lag, not on drift.
+
+on:
+  schedule:
+    - cron: "17 6 * * *" # daily, off the round hour
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  parity:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Compare npm latest with the MCP registry's newest entry
+        run: |
+          set -euo pipefail
+          NPM=$(curl -sf https://registry.npmjs.org/@dveracity%2Fsemantic-mcp \
+            | python3 -c 'import json,sys; print(json.load(sys.stdin)["dist-tags"]["latest"])')
+          echo "npm dist-tags.latest = $NPM"
+
+          MCP=$(curl -sf "https://registry.modelcontextprotocol.io/v0/servers?search=dveracity" \
+            | python3 -c '
+          import json, sys, functools
+          def key(v):
+              return [int(x) for x in v.split(".")]
+          vs = [e.get("server", e).get("version")
+                for e in json.load(sys.stdin).get("servers", [])
+                if e.get("server", e).get("name") == "com.dveracity/semantic-mcp"]
+          if not vs:
+              sys.exit("no com.dveracity/semantic-mcp entry in the registry listing")
+          print(functools.reduce(lambda a, b: b if key(b) > key(a) else a, vs))
+          ')
+          echo "MCP registry newest  = $MCP"
+
+          if [ "$NPM" != "$MCP" ]; then
+            echo "::error::npm latest is $NPM but the MCP registry's newest entry is $MCP: step 5 of the release chain (mcp-publisher publish) was skipped or failed"
+            exit 1
+          fi
+
+          # An entry can exist and still be wrong: the registry schema does not
+          # set additionalProperties: false, so a field in the wrong place
+          # validates, publishes, and is silently ignored. Read the fields the
+          # docs say to check straight off the live entry.
+          curl -sf "https://registry.modelcontextprotocol.io/v0/servers/com.dveracity%2Fsemantic-mcp/versions/$MCP" \
+            | python3 -c '
+          import json, sys
+          m = json.load(sys.stdin)["server"]
+          pkgs = m.get("packages") or []
+          problems = []
+          if not m.get("remotes"):
+              problems.append("remotes is missing or null")
+          if [p.get("version") for p in pkgs if p.get("registryType") == "npm"] != [m["version"]]:
+              problems.append("the npm package version does not match the entry version")
+          if problems:
+              print("::error::live MCP registry entry " + m["version"] + ": " + "; ".join(problems))
+              sys.exit(1)
+          print("live entry " + m["version"] + ": remotes and npm package version present and consistent")
+          '
+          echo "parity OK: npm and the MCP registry agree on $NPM"
