@@ -88,6 +88,8 @@ Reading the model is free; only the check at the end is metered.
 | `ofp_sectors` | free | Industry sectors, each with a status |
 | `ofp_sector` | free | One sector, with its reference artifacts |
 | `ofp_policies` | free | A sector's Rego guardrails, or an explicit "none published" |
+| `compliance_policies` | paid plan | Approved regulatory compliance policies (rules extracted from a regulation, admin-approved); never drafts |
+| `compliance_policy` | paid plan | One approved policy: Rego, extracted rules, inputs, provenance |
 | `ofp_validate` | credits | Check a payload against the model and, optionally, sector guardrails |
 | `ofp_semantics` | free | O-DEF semantic codes, for aligning another system's fields onto the model |
 | `ofp_semantic_code` | free | Which canonical fields carry one code — the reverse lookup a connector needs |

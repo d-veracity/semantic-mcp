@@ -5,6 +5,39 @@ wrapper over the dVeracity REST API and is also mounted by the backend at
 `https://api.dveracity.com/mcp`; a response-shape change is made in the backend
 and documented here because this package is where agents read the contract.
 
+## 0.6.0 — 2026-09-15
+
+Two new tools, and the first tool scope that is not on the free plan.
+
+### Added
+
+- **`compliance_policies` / `compliance_policy`** — the regulation-derived
+  corpus: rules AI-extracted from a regulation (EU Green Bonds, CSRD/ESRS, …)
+  and approved by a dVeracity admin. Until now the only Rego an agent could
+  reach was the Open Footprint sector guardrails (`ofp_policies`), which cite
+  no regulation by design — an agent asked "which regulation does this rule
+  implement" could only answer *none*. Now it can read the corpus that does.
+  - Approved policies only. Drafts and rejected policies are never returned;
+    a draft id answers "not found" exactly like an unknown id.
+  - Paid plans only (VaaS and above). A free account gets an actionable
+    "plan required" error naming the plan, not data. Tier-gated, not
+    credit-metered.
+  - Rego is served from the durable approved copy, never from a draft. A
+    policy approved before its source was retained comes back without Rego
+    and `rego_unavailable: source_not_retained`.
+  - `compliance_policy` carries `extracted_rules`, `inputs` (record types and
+    fields the Rego reads) and `provenance` (source regulation document,
+    extraction model/confidence, approval time, policy hash).
+- **Scope `compliance:read`.** New OAuth scope; the consent screen describes
+  it as a paid-plan scope. **An existing connector authorisation does not
+  carry it** — remove and re-add the connector (Claude) or re-authorise
+  (ChatGPT) once to pick it up. The other 16 tools are unaffected.
+- The client now turns a plan-gate 403 (`requiredTier`) into an actionable
+  error for the agent, the same way it already does for 401/402/scope.
+
+Backend counterpart: dVE #260 (admin-only policy API, durable Rego) and
+dVE #261 (`/api/v1/compliance`, scope, tier). Design and decisions: dVE #258.
+
 ## 0.5.7 — 2026-09-13
 
 No runtime change: `index.js` and the three files under `lib/` are
