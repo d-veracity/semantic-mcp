@@ -47,7 +47,7 @@ const textOf = (res) => (res.content || []).map((c) => c.text).join('');
 test('every tool advertises additionalProperties:false (#11 P1+P2)', async () => {
   const client = await connected();
   const { tools } = await client.listTools();
-  assert.equal(tools.length, 16, 'all 16 tools register');
+  assert.equal(tools.length, 18, 'all 18 tools register');
   for (const t of tools) {
     assert.equal(
       t.inputSchema.additionalProperties, false,
@@ -97,4 +97,22 @@ test('a valid call still reaches the handler', async () => {
   const res = await client.callTool({ name: 'ofp_search_entities', arguments: { q: 'emission' } });
   assert.notEqual(res.isError, true);
   assert.deepEqual(JSON.parse(textOf(res)), STUB_PAYLOAD);
+});
+
+test('the compliance tools are strict, read-only, and reject a non-uuid id (#258)', async () => {
+  const client = await connected();
+  const { tools } = await client.listTools();
+  for (const name of ['compliance_policies', 'compliance_policy']) {
+    const t = tools.find((x) => x.name === name);
+    assert.ok(t, `${name} registers`);
+    assert.equal(t.annotations.readOnlyHint, true);
+    assert.equal(t.annotations.destructiveHint, false);
+    assert.equal(t.inputSchema.additionalProperties, false);
+    const res = await client.callTool({ name, arguments: { __unexpected_param__: 'xyzzy', id: '11111111-1111-4111-8111-111111111111' } });
+    assert.equal(res.isError, true, `${name} must reject an unknown key`);
+  }
+  const bad = await client.callTool({ name: 'compliance_policy', arguments: { id: 'not-a-uuid' } });
+  assert.equal(bad.isError, true, 'a non-uuid id is rejected before any request');
+  const ok = await client.callTool({ name: 'compliance_policies', arguments: { framework: 'CSRD', include_retired: true } });
+  assert.equal(ok.isError, undefined);
 });
