@@ -5,6 +5,19 @@ wrapper over the dVeracity REST API and is also mounted by the backend at
 `https://api.dveracity.com/mcp`; a response-shape change is made in the backend
 and documented here because this package is where agents read the contract.
 
+## 0.6.2 — 2026-09-30
+
+Descriptions only, from the external recheck of 0.6.1.
+
+### Fixed
+- `ofp_entity` no longer hard-codes "48 entity names are defined in more than
+  one domain" (the served model reports 49; it moves with the snapshot). The
+  description now points at `ambiguousNameCount` in the `ofp_models` summary.
+- `compliance_policy` says that a row which never went through approval (a
+  retired seeded stub) answers "not found" like a draft — matching the backend,
+  which now applies one eligibility predicate to the catalog and the detail
+  lookup.
+
 ## 0.6.1 — 2026-09-30
 
 Descriptions only; no tool, argument or response-shape change except one
