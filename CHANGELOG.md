@@ -5,6 +5,25 @@ wrapper over the dVeracity REST API and is also mounted by the backend at
 `https://api.dveracity.com/mcp`; a response-shape change is made in the backend
 and documented here because this package is where agents read the contract.
 
+## 0.6.1 — 2026-09-30
+
+Descriptions only; no tool, argument or response-shape change except one
+argument narrowed to the values the server actually accepts. From an external
+health check of the hosted endpoint (d-veracity/semantic-mcp#26).
+
+### Fixed
+- `ofp_models` and `ofp_search_entities` no longer hard-code "eight domains" and
+  "239 entities". The served snapshot has reported nine domains and 262 entity
+  entries since OSDU Common was vendored; the counts live in the `ofp_models`
+  summary and follow `ofp_model_provenance`.
+- `validate_data.schemaCategory` is now an enum of the two categories the server
+  serves, `masterData` (default) and `referenceData`, instead of free text that
+  had to be guessed (`reference-data` fails to resolve).
+- `compliance_policy` no longer says a policy returned without retained Rego has
+  "rules still enforced by the platform". It is not loaded into the policy
+  engine; the backend response now carries `enforcement` saying whether its
+  structured validation rules are still evaluated (d-veracity/dVE#296).
+
 ## 0.6.0 — 2026-09-15
 
 Two new tools, and the first tool scope that is not on the free plan.

@@ -82,8 +82,8 @@ Reading the model is free; only the check at the end is metered.
 
 | Tool | Cost | What it does |
 |---|---|---|
-| `ofp_models` | free | The eight model domains, and which database dialects have published DDL |
-| `ofp_search_entities` | free | Search 239 canonical entities by name, description or field |
+| `ofp_models` | free | The model domains (nine as of openfootprint b60a24e), and which database dialects have published DDL |
+| `ofp_search_entities` | free | Search the canonical entities (262 entries as of b60a24e) by name, description or field |
 | `ofp_entity` | free | One entity in full: fields, types, keys, relationships, physical table |
 | `ofp_sectors` | free | Industry sectors, each with a status |
 | `ofp_sector` | free | One sector, with its reference artifacts |
@@ -97,7 +97,7 @@ Reading the model is free; only the check at the end is metered.
 
 Two behaviours are deliberate and worth knowing before you build against them.
 
-**Ambiguous entity names fail rather than resolve.** 48 of the 239 entity names
+**Ambiguous entity names fail rather than resolve.** 49 of the 262 entity entries (as of b60a24e)
 are defined in more than one domain — `Country` is in four. `ofp_entity` without
 a `domain` returns an error listing the candidates instead of picking one. Pass
 `domain` whenever you know it.
