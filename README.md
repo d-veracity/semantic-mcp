@@ -97,7 +97,7 @@ Reading the model is free; only the check at the end is metered.
 
 Two behaviours are deliberate and worth knowing before you build against them.
 
-**Ambiguous entity names fail rather than resolve.** 49 of the 262 entity entries (as of b60a24e)
+**Ambiguous entity names fail rather than resolve.** dozens of entity names (the `ofp_models` summary reports the count as `ambiguousNameCount`)
 are defined in more than one domain — `Country` is in four. `ofp_entity` without
 a `domain` returns an error listing the candidates instead of picking one. Pass
 `domain` whenever you know it.
