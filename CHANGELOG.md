@@ -5,6 +5,76 @@ wrapper over the dVeracity REST API and is also mounted by the backend at
 `https://api.dveracity.com/mcp`; a response-shape change is made in the backend
 and documented here because this package is where agents read the contract.
 
+## 0.6.3 — 2026-10-14
+
+Descriptions only; no tool, argument or response-shape change
+(d-veracity/dVE#375).
+
+### Fixed
+- `ofp_validate` no longer hard-codes "one field in the model declares a bound
+  today, so this check runs only there". That was true at openfootprint 8f48698,
+  where `Emission Statement.Quantity` was the only bounded field. Since
+  openfootprint#90 the served snapshot declares bounds across the Circularity
+  surfaces and their canonical mirrors, so `value_range` runs on many entities —
+  confirmed firing on `Circular Flow Statement`. The stale card understated the
+  tool: an agent reading it concluded range checks almost never run. How many
+  fields declare a bound moves with the snapshot, so the description now points at
+  `checked` and `schema.coverage.constraintsDeclared` on each response instead of
+  naming a number — the same move 0.6.1 and 0.6.2 made for the domain, entity and
+  ambiguous-name counts.
+- `ofp_validate` no longer enumerates the `checks_not_run` reason vocabulary. The
+  card listed twelve reasons; the validator can emit eighteen, and
+  `validity_pair_incomplete` was observed in a real response. An agent matching on
+  the documented list would read a genuine reason as unknown. That vocabulary
+  belongs to the validator and grows with it, so the card now says to read
+  `reason` and `detail` off the response.
+- README's semantic-code paragraph no longer hard-codes "660 of 813 canonical
+  fields", "one generic code covers 255 fields" or "only about 16%". The served
+  snapshot reports 1268 of 1421 annotated fields, a largest `fieldCount` of 31 and
+  `preciseShareOfAnnotated` 0.793 — the skew that paragraph described no longer
+  exists, and it now points at `summary.precision`. README is in the npm `files`
+  whitelist, so this was the `ofp_validate` defect verbatim in a second shipped
+  place.
+- README's check table completes its reason column (`validity_pair_incomplete`,
+  `validity_values_unparseable`, `reference_ids_unparseable`,
+  `policy_source_missing`, `policy_package_unparseable`) and drops the
+  "Status in 0.5.7" column header, which made a table describing current
+  behaviour read as historical.
+- `lib/tools.js` comments no longer say "16 tool definitions", "all 16" and "the
+  four no-argument tools". There are 18 tools and 6 of them take no arguments —
+  `test/tools.test.js` had been asserting 18 all along.
+- `ofp_semantic_code`'s example is no longer `ofp-sustainability:5.1_3.1`, which
+  the served snapshot does not carry at all — an agent copying the example got an
+  empty result. Ported verbatim from d-veracity/semantic-mcp#30, which fixed this
+  on the mirror on 2026-10-08 while the monorepo copy still held the dead code;
+  without the port, this release's monorepo→mirror sync would have reverted it.
+  Note for whoever picks the next example: the replacement `9.102_1.102` now
+  reports `fieldCount: 12` against a served `preciseFieldThreshold` of 10, so it
+  sits above the threshold and draws the generic-code caution that
+  `ofp_semantic_code` itself warns about. The text claims nothing about precision,
+  so it is accurate as written and is left alone here.
+
+### Added
+- A unit test that fails when any tool or argument description matches a
+  hard-coded model census: a digit or a spelled-out number attached to *fields*,
+  *entities* or *domains*, plus the exact "one field" phrasing. It catches all
+  four occurrences of this bug class ("eight domains", "239 entities", "48 entity
+  names", "one field … today") and leaves alone the legitimate numbers a card also
+  carries — argument limits, a default page size, version strings, and the
+  `ofp_semantic_code` threshold, which is fixed in the backend rather than read
+  off the snapshot.
+
+### Checked against the served snapshot and left alone
+- `ofp_entity`'s "`Country` is in four" and README's "only seven publish policy
+  guardrails" are both still true (`Country` appears in Common Entities, Facility
+  Structure, Organizational Structure and Product Life Cycle; the sector index
+  reports `sectorsWithPolicies: 7`). Both already point at a served value for the
+  real count, so neither is stale — rewording true text is not this release's job.
+- `advisories` still carries only `deprecated_field`; `valid` is still served and
+  still `removalNotBefore: 0.6.0`; `ofp_semantic_code`'s "more than ten fields"
+  still matches the backend's `fieldCount > 10` caution threshold; `didYouMean`'s
+  "up to three canonical candidates" still matches `MAX_SUGGESTIONS`.
+
 ## 0.6.2 — 2026-09-30
 
 Descriptions only, from the external recheck of 0.6.1.
