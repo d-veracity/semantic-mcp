@@ -102,11 +102,15 @@ are defined in more than one domain — `Country` is in four. `ofp_entity` witho
 a `domain` returns an error listing the candidates instead of picking one. Pass
 `domain` whenever you know it.
 
-**Semantic codes vary wildly in usefulness.** 660 of 813 canonical fields carry an
-O-DEF code, but the distribution is skewed: one generic code covers 255 fields.
-Only about 16% sit on a code shared by ten fields or fewer. Every code is
-returned with its `fieldCount` — check it before aligning to one, and pass
-`maxFieldCount: 10` to `ofp_semantics` to see only the precise ones.
+**Semantic codes vary in usefulness.** Most canonical fields carry an O-DEF code,
+but a code shared by many fields is a generic classification, and aligning to one
+asserts almost nothing. The `ofp_models` summary reports the real shape under
+`precision` — `preciseFieldThreshold` (the `fieldCount` at or below which a code
+is precise rather than generic), `fieldsOnPreciseCodes` and
+`preciseShareOfAnnotated` — and those follow the vendored snapshot rather than
+this document. Every code is returned with its `fieldCount`: check it before
+aligning to one, and pass `maxFieldCount` at that threshold to `ofp_semantics` to
+see only the precise ones.
 
 **"Nothing published" is an answer, not an error.** Most sectors are named in the
 taxonomy but have no reference implementation, and only seven publish policy
@@ -124,17 +128,17 @@ catalogue in two lists: `checked` (what ran) and `checks_not_run` (what did not,
 each with a `reason` and usually a `detail`). Read both before describing a
 payload as anything.
 
-| Check | Status in 0.5.7 | Reason reported when it does not run |
+| Check | Status | Reason reported when it does not run |
 |---|---|---|
 | `schema` — presence, primary key, types, declared constraints | runs | `entity_has_no_fields` |
-| `value_range` | **runs** where the model declares a bound: a quantity outside the declared minimum or maximum is rejected. One field in the model declares a bound today, so it fires only there | `no_range_declared`, `no_numeric_fields` |
+| `value_range` | **runs** where the model declares a bound: a quantity outside the declared minimum or maximum is rejected. Which fields declare a bound moves with the vendored snapshot, so it fires on some entities and not others — read `checked` and `schema.coverage.constraintsDeclared` per call | `no_range_declared`, `no_numeric_fields` |
 | `unit_coherence` | not run | `not_implemented` |
-| `temporal_consistency` | **runs**: a validity period whose end precedes its start is rejected | `no_validity_pair` |
-| `enum_membership` | **runs** where the vocabulary publishes its members: a well-formed key for a referent that does not exist is rejected | `no_members_published`, `no_reference_field_supplied` |
+| `temporal_consistency` | **runs**: a validity period whose end precedes its start is rejected | `no_validity_pair`, `validity_pair_incomplete`, `validity_values_unparseable` |
+| `enum_membership` | **runs** where the vocabulary publishes its members: a well-formed key for a referent that does not exist is rejected | `no_members_published`, `no_reference_field_supplied`, `reference_ids_unparseable` |
 | `referential_integrity` | not run: keys are pattern- and member-checked, never resolved against live records | `no_data_plane` |
 | `factor_provenance` | not run | `not_implemented` |
 | `materiality` | not run | `not_implemented` |
-| `sector_policy` | runs when a sector with published guardrails covers the record type | `no_sector_supplied`, `no_policy_published`, `not_applicable`, `unevaluable` |
+| `sector_policy` | runs when a sector with published guardrails covers the record type | `no_sector_supplied`, `no_policy_published`, `policy_source_missing`, `policy_package_unparseable`, `not_applicable`, `unevaluable` |
 
 Any check can also report `schema_not_run`, which means the structural check it
 builds on could not run at all.
