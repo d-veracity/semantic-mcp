@@ -133,6 +133,7 @@ payload as anything.
 | `schema` — presence, primary key, types, declared constraints | runs | `entity_has_no_fields` |
 | `value_range` | **runs** where the model declares a bound: a quantity outside the declared minimum or maximum is rejected. Which fields declare a bound moves with the vendored snapshot, so it fires on some entities and not others — read `checked` and `schema.coverage.constraintsDeclared` per call | `no_range_declared`, `no_numeric_fields` |
 | `unit_coherence` | not run | `not_implemented` |
+| `calculation_reproducibility` | **runs** where the record carries all three of a quantity, an emission factor value and a stated CO2e result: `quantity × factor = result` is reproduced within 1%, and a record that contradicts itself is rejected | `no_calculation_inputs`, `calculation_inputs_incomplete`, `ambiguous_calculation_inputs`, `calculation_inputs_unparseable` |
 | `temporal_consistency` | **runs**: a validity period whose end precedes its start is rejected | `no_validity_pair`, `validity_pair_incomplete`, `validity_values_unparseable` |
 | `enum_membership` | **runs** where the vocabulary publishes its members: a well-formed key for a referent that does not exist is rejected | `no_members_published`, `no_reference_field_supplied`, `reference_ids_unparseable` |
 | `referential_integrity` | not run: keys are pattern- and member-checked, never resolved against live records | `no_data_plane` |
@@ -143,14 +144,34 @@ payload as anything.
 Any check can also report `schema_not_run`, which means the structural check it
 builds on could not run at all.
 
+`calculation_reproducibility` is self-referential and nothing more. It resolves
+its three inputs from the model — the field carrying the emission-measure role, a
+`… Factor Value` (never a `… Factor ID`, which is a reference to a factor rather
+than a number to multiply by) and a `… CO2e …` result — or, for a record in the
+vocabulary the guardrails read, from `quantity_value` / `emission_factor_value` /
+`co2e_kg`. A slot the record fills more than once is `ambiguous_calculation_inputs`
+and the check declines rather than picks. The 1% tolerance is the one
+`CalculationAccuracy` in the verification engine and `calc_tolerance` in the
+ISO 14064 quantification policy use, so the identity has one tolerance on every
+surface. What it catches is a record whose own numbers do not multiply out. It
+does **not** say the factor is the right one for this source and period
+(`factor_provenance`, still not run) or that the quantity came from the meter it
+claims (the data plane, still not run) — a reproduced calculation is a
+self-consistent record, not a verified one.
+
 - `schemaValid` is the structural verdict (`null` if the structural check could not run).
 - `assuranceLevel` names the depth earned: `schema-only`, `schema-and-value`,
   `schema-value-and-policy` or `full`. Each level needs every check beneath it,
-  so guardrails without a value check is still `schema-only`.
+  so guardrails without a value check is still `schema-only`. The ladder is gated
+  on `value_range` — a bound the model itself declares — so a record that
+  reproduced its own arithmetic without one still reads `schema-only`;
+  `checked` is where that shows up, and it is the more precise of the two.
 - Every violation and warning carries `severity` (`error` | `warning`). Rule ids
   are stable: `required_field_missing`, `pattern_mismatch`, `format_mismatch`,
   `type_mismatch`, `primary_key_missing`, `enum_violation`, `value_range` (with
-  `bound`: `minimum` | `maximum`), `temporal_consistency`, `enum_membership`, …
+  `bound`: `minimum` | `maximum`), `temporal_consistency`, `enum_membership`,
+  `calculation_reproducibility` (with `expected`, `received`, `tolerance` and the
+  three `inputs` it read), …
   `unknown_field` is a per-field warning and stays one.
 - `unknown_field` warnings carry `didYouMean`: up to three canonical candidates,
   each with a confidence and the O-DEF code that field carries. The list is empty
