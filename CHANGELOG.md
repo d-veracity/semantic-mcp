@@ -5,6 +5,60 @@ wrapper over the dVeracity REST API and is also mounted by the backend at
 `https://api.dveracity.com/mcp`; a response-shape change is made in the backend
 and documented here because this package is where agents read the contract.
 
+## 0.6.4 — 2026-10-19
+
+One new check in the `ofp_validate` response, from the external adversarial
+evaluation of the hosted connector: of the defects planted in a synthetic
+refinery record, a wrong calculation was the one that needed no data plane, no
+registry and no policy to catch, and nothing on this surface caught it.
+
+### Added
+- `calculation_reproducibility` — where a record carries a quantity, an emission
+  factor value and a stated CO2e result, `quantity × factor = result` is
+  reproduced within 1% and a record that contradicts itself is rejected as a
+  `calculation_reproducibility` violation carrying `expected`, `received`,
+  `tolerance` and the three `inputs` it read. Inputs resolve from the model
+  (the emission-measure role, a `… Factor Value`, a `… CO2e …` result) or from
+  the e-ledger vocabulary the guardrails read (`quantity_value`,
+  `emission_factor_value`, `co2e_kg`). The tolerance is the one
+  `CalculationAccuracy` and the ISO 14064 quantification policy already use.
+- Four skip reasons for it: `no_calculation_inputs`, `calculation_inputs_incomplete`
+  (naming which of the three are absent), `ambiguous_calculation_inputs` (the
+  record fills one slot more than once, so the check declines rather than picks)
+  and `calculation_inputs_unparseable`.
+
+### Fixed
+- **A structurally valid emission-ledger record was impossible to express.**
+  Every identifier pattern in the v5 Emission Ledger block of the vendored model
+  carried one escape level too many: the compiled regex asked for a literal
+  backslash where the identifier alphabet meant a word character, so all 35 of
+  them matched nothing at all, and a well-formed `Direct Emission ID` drew a
+  `pattern_mismatch` however correct it was. Fixed upstream in openfootprint
+  (commit `5280d83`) and re-vendored here. `schemaValid` is now reachable as
+  `true` on a carbon-measure record, and the red-team corpus asserts it on three
+  of them.
+- **The `value_range` description stopped naming a count.** The same re-vendor
+  brought openfootprint#90, which bounds 32 numerics across the Circularity and
+  product-life-cycle surfaces, so `value_range` now runs on those entities and
+  `assuranceLevel` can reach `schema-and-value` there. The description says the
+  check runs where the model declares a bound and points at `checked` — which
+  stays true when the next model release moves the number again. The pinned
+  count had already gone stale once and been corrected once.
+
+### Notes
+- The check is self-referential and says so. It catches a record whose own
+  numbers do not multiply out; `factor_provenance` and `referential_integrity`
+  still report themselves as not run, because a reproduced calculation is a
+  self-consistent record, not a verified one.
+- `assuranceLevel` is unchanged in meaning: the ladder stays gated on
+  `value_range`, so a record that reproduced its arithmetic without a declared
+  bound still reads `schema-only`. `checked` is the precise list.
+- The vendored Open Footprint snapshot moves from `f8b20dd` to `5280d83` —
+  eleven upstream commits, of which two change responses: the pattern fix above,
+  and #90 (Circularity bounds, and the reporting period re-paired as
+  `period_start`/`period_end` so `temporal_consistency` reads it). The ref and
+  commit are recorded in `ofp-source.json` and served by `GET /api/v1/ofp/meta`.
+
 ## 0.6.3 — 2026-10-14
 
 Descriptions only; no tool, argument or response-shape change
