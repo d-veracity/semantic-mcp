@@ -5,6 +5,122 @@ wrapper over the dVeracity REST API and is also mounted by the backend at
 `https://api.dveracity.com/mcp`; a response-shape change is made in the backend
 and documented here because this package is where agents read the contract.
 
+## 0.8.1 — 2026-10-31
+
+### Added
+- `_meta.pricing.plan_required` on plan-gated tools (`compliance_policies`,
+  `compliance_policy`, `compliance_policy_register`, `compliance_evaluation`,
+  `compliance_evaluate`). Their `amount` is 0 because calls are included in the
+  plan, not because any account may call them; the field names the minimum tier.
+- A certification price in the REST manifest: `POST /api/v1/vaas/certify`
+  costs 500 credits ($5), charged in full only when certification succeeds.
+- `params._meta.idempotencyKey` on a `tools/call`, as an alternative to the
+  `Idempotency-Key` header on the hosted `/mcp` request. Both reach the metered
+  REST call; when both are sent they must match, and a mismatch is refused with
+  a JSON-RPC `-32602` error before the tool runs. Metered tools advertise
+  `_meta.idempotency` (`{ header, parameter, maxLength }`).
+### Changed
+- Tool descriptions name plans that exist on the pricing page (Explorer, VaaS,
+  API, Enterprise) and point a `payment_required` caller at `offers[]` /
+  `checkoutUrl` instead of telling it to "top up credits".
+- `offers[]` no longer lists VaaS as a membership. The tier still exists
+  (compliance tools still carry `plan_required: "vaas"`, and credit packs and
+  certification are unchanged); VaaS is granted by administration or paid per
+  call, so naming it as a purchasable membership pointed agents at a checkout
+  most deployments cannot open. `billing_subscribe` accepts `api` or
+  `enterprise` only.
+- An offer whose price is not configured omits `usd` instead of sending
+  `null`, so a client never renders a blank price or a checkout for a plan the
+  deployment cannot sell.
+- `billing_purchase` no longer promises a `paymentLink`: it always returns
+  `checkoutUrl` and adds `paymentLink` only when the deployment configures one.
+
+## 0.8.0 — 2026-10-31
+
+Discovery-to-payment: an agent can read the catalogue and its prices before it
+has a credential, then send a human to the right checkout when a call needs
+one. It can also step up its OAuth grant for a tool that needs a scope it has
+not approved yet. Validation semantics and verdict wording are unchanged.
+
+### Added
+- `_meta.pricing` on every tool definition:
+  `{ unit: "credit", amount, usd }`, where `amount` is 0 for a free tool.
+  The hosted endpoint substitutes the deployment's billing values; the stdio
+  package uses the same defaults and environment overrides as the backend.
+- `billing_plans` (anonymous on the hosted endpoint), `billing_status`,
+  `billing_purchase` and `billing_subscribe`. The two checkout tools return a
+  URL for a human; nothing charges until that page is completed, and a
+  subscription is always marked `approvalRequired`.
+- `Idempotency-Key` support on the metered REST routes: a retried call with the
+  same key is charged once and replays the original result. A different body
+  under the same key is refused. The hosted `/mcp` endpoint forwards the header
+  from the JSON-RPC request to the loop-back call.
+- Every tool declares OAuth `securitySchemes` at the top level and in `_meta`,
+  generated from one `TOOL_SCOPES` map shared with the hosted scope gate.
+- Hosted OAuth callers missing a tool scope receive an HTTP 200 tool error
+  with `_meta["mcp/www_authenticate"]` and the HTTP challenge header. Mixed
+  batches retain allowed results; missing/invalid credentials still get 401.
+- Explicit reauthorization displays and approves the union of the requested
+  scopes and the same user's active grants for that client. Existing grants
+  are never upgraded automatically. `id_token_hint` is ignored (no ID tokens).
+
+### Changed
+- `initialize` and `tools/list` succeed without credentials on the hosted
+  endpoint. Every account-scoped `tools/call` still requires OAuth or
+  `X-Api-Key`; the 401 now also carries `checkoutUrl` and `offers[]`.
+- A 402 now carries `checkoutUrl` and `offers[]` alongside the existing
+  `balance`, `needed` and `purchaseUrl`.
+- An OAuth authorize request with no `scope` issues the Explorer set
+  (`ofp:read`, `semantic:templates`, `compliance:read`) rather than every
+  scope. Clients that need a metered tool request its scope explicitly, and
+  the step-up challenge names it.
+
+### Fixed
+- Refresh requests cannot expand the stored grant: escalation returns
+  `invalid_scope`, omitted scopes retain the grant, and subsets narrow it.
+
+### Release
+- Founder publication only. The backend installs the bundled 0.8.0 npm
+  archive so hosted tools/list does not depend on prior npm publication.
+
+## 0.7.0 — 2026-10-21
+
+The CBAM release: an agent can now execute a named, approved compliance
+policy and read the audit record back. Until this version the surface could
+read a policy and its Rego but had no operation that ran *that* policy — the
+generic OFP validator was not proof that the regulation-derived rules ran.
+
+### Added
+- `compliance_evaluate` — executes one approved policy (`policy_id` is
+  required; the tool never fans out over frameworks and never falls back to
+  the OFP validator) against one record and returns a four-valued decision
+  (`passed`, `denied`, `unevaluable`, `error`), the per-check outcomes with
+  the rule reference and verdict, `missing_inputs`, `remediation`, the policy
+  version/approved hash/loaded module hash, and a `coverage` block naming the
+  provisions the policy does not encode. `allow` is true only for `passed`.
+  The result is persisted as an audit record. A policy that cannot load, has
+  a hash mismatch or yields zero checks answers HTTP 422 with
+  `decision: "error"` — the tool returns that body as `isError` so an agent
+  sees why instead of retrying a transport failure. Requires the
+  `compliance:evaluate` scope; paid plans only.
+- `compliance_evaluation` — reads one stored evaluation by id. Scoped to the
+  caller: another account's id answers "not found" exactly like an unknown
+  one. Requires `compliance:read`.
+- `compliance_policy_register` — the published release register: every
+  extracted provision with its legal reference, review verdict, disposition,
+  rendered treatment, status (`enforced`, `attested`, `unsupported`,
+  `informational`) and the approved hash/version/effective date. Requires
+  `compliance:read`.
+- OAuth scope `compliance:evaluate`, with its consent-screen description.
+  Connectors authorised before this version must be re-authorised to call
+  `compliance_evaluate`.
+
+### Changed
+- `compliance_evaluate` is the first tool that is not read-only: it executes
+  a policy and stores the audit record (`readOnlyHint: false`,
+  `idempotentHint: false`, `destructiveHint: false`). Every other tool keeps
+  its existing annotations.
+
 ## 0.6.4 — 2026-10-19
 
 One new check in the `ofp_validate` response, from the external adversarial

@@ -94,3 +94,80 @@ test('base URL trailing slash is normalized and key header sent', async () => {
   assert.equal(captured.url, 'https://api.example/api/v1/semantic/templates');
   assert.equal(captured.opts.headers['X-Api-Key'], 'dvrc_test');
 });
+
+function capturingClient(status, body) {
+  const captured = {};
+  const client = new SemanticClient({
+    apiKey: 'dvrc_test',
+    fetchImpl: async (url, opts) => {
+      captured.url = url;
+      captured.opts = opts;
+      return { ok: status >= 200 && status < 300, status, json: async () => body };
+    },
+  });
+  return { client, captured };
+}
+
+test('complianceEvaluate posts the named policy and omits absent optional fields', async () => {
+  const { client, captured } = capturingClient(200, { decision: 'passed', allow: true });
+  const out = await client.complianceEvaluate({ policy_id: 'p-1', entity: { cn_code: '7601 10 00' } });
+  assert.equal(out.decision, 'passed');
+  assert.equal(captured.url, 'https://dve-backend-xytsvgj3fq-ue.a.run.app/api/v1/compliance/evaluate');
+  assert.equal(captured.opts.method, 'POST');
+  assert.deepEqual(JSON.parse(captured.opts.body), {
+    policy_id: 'p-1',
+    entity: { cn_code: '7601 10 00' },
+  });
+});
+
+test('complianceEvaluate forwards evidence, context and entity_type when supplied', async () => {
+  const { client, captured } = capturingClient(200, {});
+  await client.complianceEvaluate({
+    policy_id: 'p-1',
+    entity_type: 'carbon_measure',
+    entity: {},
+    context: { report_period: '2026-Q1' },
+    evidence: [{ kind: 'installation', ref: 'installation/BR-ALU-01/2026-Q1', sha256: 'a'.repeat(64) }],
+  });
+  const body = JSON.parse(captured.opts.body);
+  assert.equal(body.entity_type, 'carbon_measure');
+  assert.deepEqual(body.context, { report_period: '2026-Q1' });
+  assert.equal(body.evidence.length, 1);
+});
+
+test('complianceEvaluate sends a declaration without an entity', async () => {
+  const { client, captured } = capturingClient(200, {});
+  await client.complianceEvaluate({
+    policy_id: 'p-1',
+    entity_type: 'cbam_declaration',
+    declaration: { declaration_id: 'decl-2026', reporting_year: 2026 },
+    lines: [{ declaration_line_id: 'l1', record_id: 'cm-1' }],
+  });
+  const body = JSON.parse(captured.opts.body);
+  assert.equal(body.entity_type, 'cbam_declaration');
+  assert.equal(body.entity, undefined);
+  assert.equal(body.declaration.declaration_id, 'decl-2026');
+  assert.equal(body.lines.length, 1);
+});
+
+test('a 422 error decision keeps its status and body for the tool layer', async () => {
+  const detail = { decision: 'error', allow: false, error: { code: 'policy_no_checks' } };
+  const { client } = capturingClient(422, detail);
+  await assert.rejects(
+    () => client.complianceEvaluate({ policy_id: 'p-1', entity: {} }),
+    (err) => err instanceof SemanticApiError && err.status === 422 && err.detail.error.code === 'policy_no_checks'
+  );
+});
+
+test('complianceEvaluation and compliancePolicyRegister encode the id and use GET', async () => {
+  const { client, captured } = capturingClient(200, {});
+  await client.complianceEvaluation('eval-1');
+  assert.equal(captured.url, 'https://dve-backend-xytsvgj3fq-ue.a.run.app/api/v1/compliance/evaluations/eval-1');
+  assert.equal(captured.opts.method, 'GET');
+  await client.compliancePolicyRegister('policy/with space');
+  assert.equal(
+    captured.url,
+    'https://dve-backend-xytsvgj3fq-ue.a.run.app/api/v1/compliance/policies/policy%2Fwith%20space/register'
+  );
+  assert.equal(captured.opts.method, 'GET');
+});
