@@ -9,9 +9,11 @@ verified-emissions knowledge graph (Open Footprint / PPDM / OGMP-methane) — an
 
 ## Prerequisites
 
-1. An **api-tier subscription**: https://dveracity.com/pricing
+1. A free **Explorer** account (OAuth) or a paid plan: https://dveracity.com/pricing
+   — Explorer includes API-key management and a monthly metered-call allowance.
 2. An **API key** (`dvrc_…`): `POST /api/v1/api-keys` (or the dashboard)
-3. API **credits** for metered calls: `POST /api/v1/vaas/credits/purchase`
+3. API **credits** for calls beyond the free allowance: `POST /api/v1/vaas/credits/purchase`
+   (or ask the agent to use `billing_purchase`)
 
 The machine-readable service contract lives at `GET /api/v1/semantic/manifest`
 (public, no auth).
@@ -75,6 +77,21 @@ scopes. Signify-based nonce signing is a planned enhancement.
 | `validate_data` | credits | Validate a payload against a supported standard |
 | `keri_identity` | free | This agent's verified vLEI identity, when KERI mode is configured |
 
+Every tool definition carries `_meta.pricing`:
+`{ "unit": "credit", "amount": <int>, "usd": <decimal> }`, with `amount` 0 for a
+free tool. A plan-gated tool also carries `"plan_required": "<tier>"` — 0
+credits on `compliance_policies` or `compliance_evaluate` means "included in
+the VaaS plan", not "free for any account".
+
+### Billing
+
+| Tool | Cost | What it does |
+|---|---|---|
+| `billing_plans` | free | Plans, credit packs, per-credit price and the free allowance (anonymous on the hosted endpoint) |
+| `billing_status` | free | This account's plan, balance and remaining free allowance |
+| `billing_purchase` | free | One-time credit checkout: returns a `checkoutUrl` for a human, plus a `paymentLink` when the deployment configures one |
+| `billing_subscribe` | free | Membership checkout: returns `checkoutUrl` only; recurring charges need human approval |
+
 ### Open Footprint canonical model
 
 Design-time tools for building an application on the Open Footprint standard.
@@ -90,6 +107,9 @@ Reading the model is free; only the check at the end is metered.
 | `ofp_policies` | free | A sector's Rego guardrails, or an explicit "none published" |
 | `compliance_policies` | paid plan | Approved regulatory compliance policies (rules extracted from a regulation, admin-approved); never drafts |
 | `compliance_policy` | paid plan | One approved policy: Rego, extracted rules, inputs, provenance |
+| `compliance_policy_register` | paid plan | The published release register: every provision, its legal reference, review status and why it is or is not enforced |
+| `compliance_evaluate` | paid plan | Execute one named approved policy against a record: four-valued decision, per-check results, missing inputs, remediation, coverage. Stores an audit record |
+| `compliance_evaluation` | paid plan | Read back one stored evaluation — the caller's own only |
 | `ofp_validate` | credits | Check a payload against the model and, optionally, sector guardrails |
 | `ofp_semantics` | free | O-DEF semantic codes, for aligning another system's fields onto the model |
 | `ofp_semantic_code` | free | Which canonical fields carry one code — the reverse lookup a connector needs |
@@ -194,6 +214,17 @@ Metered calls return an **HTTP 402** when the account is out of credits. The
 server surfaces this as a tool error that tells the agent to ask its **human
 operator** to purchase credits or upgrade — agents should relay that message and
 stop, not retry.
+
+## Retrying metered calls safely
+
+Metered tools advertise `_meta.idempotency` (`{ header, parameter,
+maxLength }`). Send the key either as the `Idempotency-Key` header on the `/mcp`
+request or as `params._meta.idempotencyKey` on the `tools/call` itself. The
+hosted endpoint forwards it to the metered REST call: the same key is charged
+once and replays the original result, and a different body under the same key is
+refused. If both the header and the parameter are present they must match; a
+mismatch is refused with a JSON-RPC `-32602` error before the tool runs. Tools
+without `_meta.idempotency` are not metered, so a key has no effect on them.
 
 ## Test
 
