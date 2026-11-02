@@ -133,8 +133,13 @@ test('plan-gated tools name their plan, so 0 credits is not read as free', async
   for (const name of ['compliance_policies', 'compliance_policy', 'compliance_policy_register',
     'compliance_evaluation', 'compliance_evaluate']) {
     assert.equal(tools.find((t) => t.name === name)._meta.pricing.plan_required, 'vaas', name);
+    assert.equal(
+      tools.find((t) => t.name === name)._meta.pricing.plan_required_ref,
+      'billing_plans#vaas', name
+    );
   }
   assert.equal(tools.find((t) => t.name === 'ofp_models')._meta.pricing.plan_required, undefined);
+  assert.equal(tools.find((t) => t.name === 'ofp_models')._meta.pricing.plan_required_ref, undefined);
 });
 
 test('billing_subscribe offers only memberships that are sold', async () => {

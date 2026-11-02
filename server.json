@@ -2,8 +2,8 @@
   "$schema": "https://static.modelcontextprotocol.io/schemas/2025-12-11/server.schema.json",
   "name": "com.dveracity/semantic-mcp",
   "title": "dVeracity Semantic API",
-  "description": "Natural-language queries over a verified emissions knowledge graph, plus standards validation",
-  "version": "0.8.1",
+  "description": "Validate emissions data against Open Footprint, check EU CBAM records, query verified methane data",
+  "version": "0.8.2",
   "websiteUrl": "https://dveracity.com/semantic-api",
   "repository": {
     "url": "https://github.com/d-veracity/semantic-mcp",
@@ -13,7 +13,7 @@
     {
       "registryType": "npm",
       "identifier": "@dveracity/semantic-mcp",
-      "version": "0.8.1",
+      "version": "0.8.2",
       "transport": {
         "type": "stdio"
       },
