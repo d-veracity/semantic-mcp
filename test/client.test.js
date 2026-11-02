@@ -65,6 +65,43 @@ test('401 names the API key as the problem', async () => {
   );
 });
 
+test('403 plan gate relays the refusal guidance instead of inventing an upgrade URL', async () => {
+  const client = makeClient(403, {
+    success: false,
+    message: 'This feature requires a vaas subscription',
+    requiredTier: 'vaas',
+    currentTier: 'free',
+    plansUrl: 'https://dveracity.com/pricing',
+    note: 'VaaS is enabled by dVeracity; buying credit packs does not change the account tier. ' +
+      'Ask your human operator to contact dVeracity to enable VaaS, then retry.',
+  });
+  await assert.rejects(
+    () => client.query('q'),
+    (err) => {
+      assert.equal(err.status, 403);
+      assert.match(err.actionable, /enabled by dVeracity/);
+      assert.match(err.actionable, /credit packs/);
+      assert.match(err.actionable, /https:\/\/dveracity\.com\/pricing/);
+      assert.match(err.actionable, /Do not retry on your own/);
+      assert.doesNotMatch(err.actionable, /upgrade at/);
+      return true;
+    }
+  );
+});
+
+test('403 without guidance keeps the generic upgrade text', async () => {
+  const client = makeClient(403, {
+    success: false,
+    message: 'This feature requires a api subscription',
+    requiredTier: 'api',
+    currentTier: 'free',
+  });
+  await assert.rejects(
+    () => client.query('q'),
+    (err) => err.status === 403 && /upgrade at https:\/\/dveracity\.com\/pricing/.test(err.actionable)
+  );
+});
+
 test('5xx surfaces status and message', async () => {
   const client = makeClient(502, { success: false, message: 'Semantic backend unavailable' });
   await assert.rejects(() => client.query('q'), /502.*Semantic backend unavailable/);

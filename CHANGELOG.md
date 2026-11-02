@@ -5,6 +5,40 @@ wrapper over the dVeracity REST API and is also mounted by the backend at
 `https://api.dveracity.com/mcp`; a response-shape change is made in the backend
 and documented here because this package is where agents read the contract.
 
+## 0.8.2 — 2026-11-01
+
+### Security
+- `GET /authorize` no longer mints an authorization code before the user signs
+  in. It stores a pending request server-side and redirects with an opaque
+  `request` handle; the code is minted only after the user authenticates and
+  approves consent, and denying consent returns `error=access_denied` with the
+  state. The handle is rejected by `/token`, and no consent URL, template or
+  log line contains a code.
+
+### Added
+- Every tool carries a human-readable `title` (also `annotations.title`) and a
+  description that begins "Use this when…", keeping the existing caveats. The
+  registry description is now the 98-character summary of Open Footprint
+  validation, EU CBAM records and verified methane data.
+- Every offer in `billing_plans` and in 401/402 bodies carries
+  `approvalRequired` and `approvalReason`. Credit packs and memberships need a
+  human checkout; Explorer does not.
+- `billing_plans` lists certification (500 credits / $5, charged when a
+  certification succeeds) and VaaS as an admin-granted plan with no price or
+  checkout: `selfServe: false`, `howToObtain`, `contactUrl` and `unlocks`.
+  Credit packs now state that buying credits does not change the account tier.
+- Plan-gated tools add `_meta.pricing.plan_required_ref: "billing_plans#vaas"`;
+  the VaaS 403 carries `selfServe`, `howToObtain`, `contactUrl`, `unlocks` and
+  the approval fields from the same entry.
+
+### Changed
+- The server card, `initialize` `serverInfo` and commerce-restricted clients
+  each get an app description written for that surface, and the instructions
+  begin with a paragraph on when to use dVeracity. The web llms.txt and agent
+  manifest match.
+- `credits_balance` is deprecated in favour of `billing_status`; it keeps
+  working until 0.9.
+
 ## 0.8.1 — 2026-10-31
 
 ### Added
