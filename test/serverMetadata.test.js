@@ -1,5 +1,5 @@
 /**
- * Registry metadata for 0.8.2 (item 3).
+ * Registry metadata for 0.8.3 (item 4).
  *
  * The registry caps `server.json.description` at 100 characters, and the
  * package entry must name the same version the root does. These are the two
@@ -28,9 +28,9 @@ test('the registry description is the release copy and fits the 100-character ca
   assert.doesNotMatch(server.description, /\n/);
 });
 
-test('server.json and package.json agree on 0.8.2', () => {
-  assert.equal(server.version, '0.8.2');
-  assert.equal(pkg.version, '0.8.2');
+test('server.json and package.json agree on 0.8.3', () => {
+  assert.equal(server.version, '0.8.3');
+  assert.equal(pkg.version, '0.8.3');
   assert.equal(server.packages.length, 1);
   assert.equal(server.packages[0].version, pkg.version);
 });

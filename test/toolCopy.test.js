@@ -83,12 +83,11 @@ function copyOf(tool) {
   return [
     tool.name,
     tool.title || '',
-    (tool.annotations && tool.annotations.title) || '',
     tool.description || '',
   ].join('\n');
 }
 
-test('every tool carries the human title in both metadata locations', async () => {
+test('every tool carries the human title at the top level', async () => {
   const tools = await catalogue();
   assert.deepEqual(
     Object.fromEntries(tools.map((tool) => [tool.name, tool.title])),
@@ -97,7 +96,9 @@ test('every tool carries the human title in both metadata locations', async () =
   for (const tool of tools) {
     assert.notEqual(tool.title, tool.name, `${tool.name} title is still the tool name`);
     assert.doesNotMatch(tool.title, /_/, `${tool.name} title is snake_case`);
-    assert.equal(tool.annotations.title, tool.title, `${tool.name} annotations.title differs`);
+    // The title is advertised once, at the top level: repeating it in
+    // annotations spends tools/list budget on the same string twice.
+    assert.equal(tool.annotations.title, undefined, `${tool.name} repeats annotations.title`);
     for (const hint of ['readOnlyHint', 'destructiveHint', 'idempotentHint', 'openWorldHint']) {
       assert.equal(typeof tool.annotations[hint], 'boolean', `${tool.name}.${hint} is missing`);
     }
@@ -114,9 +115,19 @@ test('every description opens with a lead sentence', async () => {
     } else {
       assert.match(tool.description, /^Use this when/, `${tool.name} lacks its lead sentence`);
     }
-    // The lead is separated from the pre-existing caveat prose.
-    assert.match(tool.description, /\n\n/, `${tool.name} lost its caveat block`);
   }
+});
+
+test('the catalogue stays inside the directory token budget', async () => {
+  const tools = await catalogue();
+  for (const tool of tools) {
+    assert.ok(
+      tool.description.length <= 1000,
+      `${tool.name} description is ${tool.description.length} characters`
+    );
+  }
+  const bytes = Buffer.byteLength(JSON.stringify({ tools }));
+  assert.ok(bytes < 20 * 1024, `tools/list is ${bytes} bytes`);
 });
 
 test('metered leads keep their price text on the unrestricted surface', async () => {
@@ -145,7 +156,7 @@ test('the commerce-restricted surface keeps titles and leads without price text'
       ? 'Plans and allowances'
       : TITLE_SNAPSHOT[tool.name];
     assert.equal(tool.title, expectedTitle, `${tool.name} title differs on the restricted surface`);
-    assert.equal(tool.annotations.title, tool.title);
+    assert.equal(tool.annotations.title, undefined, `${tool.name} repeats annotations.title`);
   }
   const restrictedCopy = tools.map(copyOf).join('\n');
   for (const banned of [/\$/, /\bprice/i, /\bpurchas/i, /\bsubscrib/i, /\bupgrad/i,

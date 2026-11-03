@@ -5,6 +5,22 @@ wrapper over the dVeracity REST API and is also mounted by the backend at
 `https://api.dveracity.com/mcp`; a response-shape change is made in the backend
 and documented here because this package is where agents read the contract.
 
+## 0.8.3 — 2026-11-02
+
+### Changed
+- Tool descriptions fit the Claude Connectors Directory token budget: no
+  description is over 1,000 characters and the hosted `tools/list` is under
+  20 KB. The long "what it checks / does not check" prose moved to the fields
+  that already report it per call (`checked`, `checks_not_run`,
+  `schema.coverage`), and the lead sentence and every caveat remain.
+- Catalogue metadata is advertised once: the human title at the tool's top
+  level (not repeated in `annotations.title`), `securitySchemes` at the top
+  level (not repeated in `_meta`), and no `$schema` dialect on each input
+  schema. Argument descriptions keep only what the argument name cannot say.
+- Tests enforce the limits on both surfaces: the package catalogue and the
+  hosted `tools/list` envelope (billing tools, `_meta.pricing` and idempotency
+  hints included).
+
 ## 0.8.2 — 2026-11-01
 
 ### Security
