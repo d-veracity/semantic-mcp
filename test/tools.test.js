@@ -51,7 +51,7 @@ async function connected(clientImpl = stubClient(), options) {
 
 const textOf = (res) => (res.content || []).map((c) => c.text).join('');
 
-test('every tool publishes identical OAuth requirements at both metadata locations', async () => {
+test('every tool publishes its OAuth requirement at the top level', async () => {
   const client = await connected();
   try {
     const schema = ListToolsResultSchema.extend({
@@ -65,7 +65,9 @@ test('every tool publishes identical OAuth requirements at both metadata locatio
         ? [{ type: 'noauth' }]
         : [{ type: 'oauth2', scopes: scope ? [scope] : [] }];
       assert.deepEqual(tool.securitySchemes, expected, tool.name);
-      assert.deepEqual(tool._meta.securitySchemes, expected, tool.name);
+      // Advertised once: a duplicate under _meta spends the tools/list budget
+      // on the same requirement twice.
+      assert.equal(tool._meta.securitySchemes, undefined, `${tool.name} repeats _meta.securitySchemes`);
     }
   } finally {
     await client.close();

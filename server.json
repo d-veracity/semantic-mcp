@@ -3,7 +3,7 @@
   "name": "com.dveracity/semantic-mcp",
   "title": "dVeracity Semantic API",
   "description": "Validate emissions data against Open Footprint, check EU CBAM records, query verified methane data",
-  "version": "0.8.2",
+  "version": "0.8.3",
   "websiteUrl": "https://dveracity.com/semantic-api",
   "repository": {
     "url": "https://github.com/d-veracity/semantic-mcp",
@@ -13,7 +13,7 @@
     {
       "registryType": "npm",
       "identifier": "@dveracity/semantic-mcp",
-      "version": "0.8.2",
+      "version": "0.8.3",
       "transport": {
         "type": "stdio"
       },
