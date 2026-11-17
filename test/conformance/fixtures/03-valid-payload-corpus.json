@@ -9,7 +9,7 @@
       "domain": "common-entities",
       "payload": {
         "Emission Activity ID": "dveracity:master-data--EmissionActivity:X-001:1",
-        "Emission Component ID": "dveracity:reference-data--EmissionComponent:X-001:1",
+        "Emission Component ID": "dveracity:reference-data--EmissionComponent:CH4:1",
         "Emission Recording Method Type ID": "dveracity:reference-data--EmissionRecordingMethodType:CALCULATED:1",
         "Emission Statement ID": "dveracity:transactional-data--EmissionStatement:X-001:1",
         "Name": "Venue electricity, September 2026",
@@ -27,7 +27,7 @@
       "payload": {
         "Emission Activity ID": "dveracity:master-data--EmissionActivity:X-001:1",
         "Emission Calculation Model ID": "dveracity:master-data--EmissionCalculationModel:X-001:1",
-        "Emission Component ID": "dveracity:reference-data--EmissionComponent:X-001:1",
+        "Emission Component ID": "dveracity:reference-data--EmissionComponent:CH4:1",
         "Quantity": 1250.5,
         "Emission Recording Method Type ID": "dveracity:reference-data--EmissionRecordingMethodType:CALCULATED:1",
         "Description": "Purchased electricity for the main venue.",
@@ -47,7 +47,7 @@
       "payload": {
         "Emission Activity ID": "dveracity:master-data--EmissionActivity:X-001:1",
         "Emission Calculation Model ID": "dveracity:master-data--EmissionCalculationModel:X-001:1",
-        "Emission Component ID": "dveracity:reference-data--EmissionComponent:X-001:1",
+        "Emission Component ID": "dveracity:reference-data--EmissionComponent:CH4:1",
         "Quantity": 0,
         "Emission Recording Method Type ID": "dveracity:reference-data--EmissionRecordingMethodType:CALCULATED:1",
         "Description": "Purchased electricity for the main venue.",
@@ -67,7 +67,7 @@
       "payload": {
         "Emission Activity ID": "dveracity:master-data--EmissionActivity:X-001:1",
         "Emission Calculation Model ID": "dveracity:master-data--EmissionCalculationModel:X-001:1",
-        "Emission Component ID": "dveracity:reference-data--EmissionComponent:X-001:1",
+        "Emission Component ID": "dveracity:reference-data--EmissionComponent:CH4:1",
         "Quantity": 1250.5,
         "Emission Recording Method Type ID": "dveracity:reference-data--EmissionRecordingMethodType:CALCULATED:1",
         "Description": "Purchased electricity for the main venue.",
@@ -88,7 +88,7 @@
       "payload": {
         "Emission Activity ID": "dveracity:master-data--EmissionActivity:X-001:1",
         "Emission Calculation Model ID": "dveracity:master-data--EmissionCalculationModel:X-001:1",
-        "Emission Component ID": "dveracity:reference-data--EmissionComponent:X-001:1",
+        "Emission Component ID": "dveracity:reference-data--EmissionComponent:CH4:1",
         "Quantity": 1.234e-06,
         "Emission Recording Method Type ID": "dveracity:reference-data--EmissionRecordingMethodType:CALCULATED:1",
         "Description": "Purchased electricity for the main venue.",
@@ -108,7 +108,7 @@
       "payload": {
         "Emission Activity ID": "dveracity:master-data--EmissionActivity:X-001:1",
         "Emission Calculation Model ID": "dveracity:master-data--EmissionCalculationModel:X-001:1",
-        "Emission Component ID": "dveracity:reference-data--EmissionComponent:X-001:1",
+        "Emission Component ID": "dveracity:reference-data--EmissionComponent:CH4:1",
         "Quantity": 98765432.1,
         "Emission Recording Method Type ID": "dveracity:reference-data--EmissionRecordingMethodType:CALCULATED:1",
         "Description": "Purchased electricity for the main venue.",
@@ -128,7 +128,7 @@
       "payload": {
         "Emission Activity ID": "dveracity:master-data--EmissionActivity:X-001:1",
         "Emission Calculation Model ID": "dveracity:master-data--EmissionCalculationModel:X-001:1",
-        "Emission Component ID": "dveracity:reference-data--EmissionComponent:X-001:1",
+        "Emission Component ID": "dveracity:reference-data--EmissionComponent:CH4:1",
         "Quantity": 1250.5,
         "Emission Recording Method Type ID": "dveracity:reference-data--EmissionRecordingMethodType:CALCULATED:1",
         "Description": "Scope 2 \u00b7 market-based \u00b7 \u22642\u00b0C pathway",
@@ -148,7 +148,7 @@
       "payload": {
         "Emission Activity ID": "dveracity:master-data--EmissionActivity:X-001:1",
         "Emission Calculation Model ID": "dveracity:master-data--EmissionCalculationModel:X-001:1",
-        "Emission Component ID": "dveracity:reference-data--EmissionComponent:X-001:1",
+        "Emission Component ID": "dveracity:reference-data--EmissionComponent:CH4:1",
         "Quantity": 1250.5,
         "Emission Recording Method Type ID": "dveracity:reference-data--EmissionRecordingMethodType:CALCULATED:1",
         "Description": "Purchased electricity for the main venue.",

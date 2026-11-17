@@ -48,7 +48,10 @@ BY_NAME = {}
 for e in ENTS:
     BY_NAME.setdefault(e["name"], []).append(e)
 
-ES = [e for e in ENTS if e["name"] == "Emission Statement"][0]
+# Packs contribute same-named stub records (duplicateOf set, or zero fields);
+# only the canonical record carries the declared constraints.
+ES = [e for e in ENTS if e["name"] == "Emission Statement"
+      and e.get("fields") and not e.get("duplicateOf")][0]
 ES_FIELDS = {f["name"]: f for f in ES["fields"]}
 
 # Stands in for a natural key where the vocabulary publishes no members. See
@@ -85,8 +88,10 @@ def key_for(field):
     Where no members are published the placeholder stays, deliberately. Absence
     of `referenceMembers` means the vocabulary is not published, not that any
     referent is acceptable (index `usage.referenceMembers`), so the fixture must
-    not invent a member for it. EmissionComponent and UnitOfMeasure are in that
-    position today and keep PLACEHOLDER_KEY.
+    not invent a member for it. UnitOfMeasure is in that position today and
+    keeps PLACEHOLDER_KEY. EmissionComponent published its members in the
+    SF6 P1 change (2026-11-08), so it now picks up keys[0] like any other
+    published vocabulary.
 
     `keys` is sorted at source, so keys[0] is deterministic across regenerations.
     For EmissionRecordingMethodType that is CALCULATED — a member, and apt for a
