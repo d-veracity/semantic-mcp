@@ -6,7 +6,7 @@
   "base_payload": {
     "Emission Activity ID": "dveracity:master-data--EmissionActivity:X-001:1",
     "Emission Calculation Model ID": "dveracity:master-data--EmissionCalculationModel:X-001:1",
-    "Emission Component ID": "dveracity:reference-data--EmissionComponent:X-001:1",
+    "Emission Component ID": "dveracity:reference-data--EmissionComponent:CH4:1",
     "Quantity": 1250.5,
     "Emission Recording Method Type ID": "dveracity:reference-data--EmissionRecordingMethodType:CALCULATED:1",
     "Description": "Purchased electricity for the main venue.",

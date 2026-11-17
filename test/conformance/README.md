@@ -277,6 +277,60 @@ Merged second, the gate is red in between.
 **Cost.** Opening this PR runs `conformance.yml` (~19 credits) plus the
 parameter-strictness suite (~3).
 
+## Re-cut: Emission Component members published (SF6 P1)
+
+**Stated reason, as the governance above requires.** The openfootprint change
+"SF6 P1 — publish gas identity and GWP" (deployed between model commits
+`c2567ac` and `511159e`, 2026-11-08/09) published the `EmissionComponent`
+vocabulary's members — 41 gases with CAS numbers and canonical short keys — so
+a well-formed identifier whose referent does not exist is now rejected by
+`enum_membership`. This is the previous re-cut's closing sentence coming due:
+`Emission Component ID` carried the placeholder `X-001`, which is not a member,
+so every payload built on the base inherited a false positive. The nightly
+gate went red on 2026-11-09 and stayed red: 8/8 false positives on the valid
+corpus, negative tests N1 and N2 firing, and a spurious extra `enum_membership`
+finding on every error probe.
+
+The re-cut is regeneration alone, exactly as the previous section prescribed:
+
+| Field | Before | After |
+|---|---|---|
+| `Emission Component ID` | `…EmissionComponent:X-001:1` | `…EmissionComponent:CH4:1` |
+
+**Which member.** `keys[0]` of the published, sorted set — `CH4`, deterministic
+across regenerations, per the `key_for()` convention. Nothing in the suite
+depends on which member is chosen; if QA prefers `CO2e` as apt for a
+purchased-electricity payload, `key_for()` is the one place to pin it.
+
+**What deliberately did not change.** `Unit Of Measure ID` still carries
+`X-001`: its vocabulary publishes no members, and absence means *not
+published*, never *any referent acceptable*. E6 still plants its non-member on
+`Emission Recording Method Type ID` (`scope9`). `04-parameter-strictness.json`
+again needs no re-cut, for the reasons checked in the previous section: its two
+inline placeholders are inert under `run_rejection()`, and P4 builds from V1 at
+runtime, inheriting this re-cut automatically.
+
+**Builder fix required to regenerate.** The index now carries six records named
+"Emission Statement": the canonical 16-field record, a pack stub with
+`duplicateOf` set, and four empty records. `build_fixtures.py` took `[0]`, which
+is the stub (`constraints: null` on every field), and silently produced a
+3-field base payload. The selection now skips records with `duplicateOf` set or
+no fields. Without this fix, regeneration is not reproducible against any
+index at or after `511159e`.
+
+**Regenerating.** Pinned to the deployed model commit so the diff is
+reproducible:
+
+```bash
+gh api -H "Accept: application/vnd.github.raw" \
+    "repos/d-veracity/openfootprint/contents/cicd/generated/entity-index.json?ref=33e237a" \
+    > /tmp/ofp-entity-index.json
+OFP_ENTITY_INDEX=/tmp/ofp-entity-index.json python3 build_fixtures.py
+```
+
+**Cost.** Opening this PR runs `conformance.yml` (~19 credits) plus the
+parameter-strictness suite (~3).
+
 ## Accepted-red: parameter strictness (suite 04)
 
 `run_param_strictness.py` is a second, separate suite covering
