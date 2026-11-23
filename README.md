@@ -114,6 +114,8 @@ Reading the model is free; only the check at the end is metered.
 | `ofp_semantics` | free | O-DEF semantic codes, for aligning another system's fields onto the model |
 | `ofp_semantic_code` | free | Which canonical fields carry one code — the reverse lookup a connector needs |
 | `ofp_model_provenance` | free | Which snapshot of the standard this deployment serves |
+| `ofp_units` | free | The Energistics unit dictionary: quantity-type index, per-quantity unit lists, or one code/alias resolved (candidates on refusal) |
+| `ofp_convert` | free | Convert a value between units; answers `{value, unit, provenance}`. Cross-dimension bridges need a declared assumption; refusals are 422 bodies with an error code |
 
 Two behaviours are deliberate and worth knowing before you build against them.
 
@@ -140,6 +142,48 @@ published*, never *there are no constraints* — a payload checked for structure
 alone is not a compliant one, and should not be described as one.
 
 A fourth outcome, `unevaluable`, means the sector's rules ran but every rule that came back false reads an input the payload does not carry (`policy.missingInputs`, e.g. `co2e_kg`, `direction`, `counterparty_industry`). Those are e-ledger record fields, not canonical Open Footprint field names — `ofp_policies` lists them per policy under `inputs`. Unevaluable is neither a pass nor a breach, and `valid` is `null`.
+
+### Units of measure
+
+`ofp_units` and `ofp_convert` serve the Energistics unit dictionary. Both are
+free; a conversion is a few floating-point operations against an in-memory
+dictionary, so there is nothing to meter.
+
+**Discovery is quantity-first.** `ofp_units` with no arguments returns the
+quantity-type index (each type's base unit and count — the response's
+`totalUnits` carries the dictionary size). `quantity` lists that quantity's
+units as a summary; `detail=full` adds conversion factors and is large, so
+prefer summary and page with `limit`/`offset` when filling a cache. `code`
+resolves one symbol or alias. Unambiguous case and notation variants resolve
+(`MWH` finds `MW.h`, recorded in `unitResolution`); a genuine choice refuses
+with candidates rather than guessing.
+
+**The conversion answer is a contract shape.** `ofp_convert` returns
+`{success, value, unit, provenance}` at the top level — deliberately not the
+`withSource` envelope the design-time tools use. Keep `provenance` with any
+number you report: it names the dictionary, its version and how each unit
+resolved.
+
+**Refusals are data, not transport errors.** A refused conversion answers 422
+with `error` ∈ `unresolved_unit`, `incompatible_dimension`,
+`assumption_required`, `invalid_conversion_parameters`, plus `message` and
+`detail`; the tool returns that body as a normal result. Read it — the detail
+carries candidates or the missing assumption field — and do not retry blindly.
+
+**Cross-dimension bridges need a declared assumption.** Volume to energy needs
+`{kind: "calorificValue", value, unit, perUnit, basis: "gross"|"net"}`; volume
+to mass needs `{kind: "density", value, unit, perUnit, referenceTemperature,
+referencePressure}`. The service never invents one: without it the answer is
+`assumption_required`, and the 422 detail names what is missing.
+
+**A dictionary pin is honoured or refused.** `dictionary` accepts
+`[<dictionary>@]<version>`; the version must match the loaded dictionary
+exactly (see the `dictionary` provenance in any `ofp_units` answer). A mismatch
+is refused rather than silently ignored, so a caller never believes a pin was
+applied when it was not.
+
+**Not CO2e.** Multiplying by a global warming potential is not a unit
+conversion; this service does not do it.
 
 ### What `ofp_validate` checks, and what it does not
 

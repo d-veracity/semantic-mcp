@@ -104,7 +104,7 @@ test('a read grant reads evaluations but receives an actionable step-up for eval
 test('every tool advertises additionalProperties:false (#11 P1+P2)', async () => {
   const client = await connected();
   const { tools } = await client.listTools();
-  assert.equal(tools.length, 25, 'all 25 tools register');
+  assert.equal(tools.length, 27, 'all 27 tools register');
   for (const t of tools) {
     assert.equal(
       t.inputSchema.additionalProperties, false,
@@ -447,4 +447,113 @@ test('the shipped README hard-codes no model census either (#375)', async () => 
     offenders, [],
     'README must point at a served value, not a number:\n  ' + offenders.join('\n  ')
   );
+});
+
+test('ofp_convert forwards the conversion request and is a free, strict read', async () => {
+  let captured;
+  const client = await connected({
+    keriEnabled: () => false,
+    ofpConvert: async (args) => {
+      captured = args;
+      return { success: true, value: 2.5, unit: 'MW.h', provenance: { sourceDictionary: 'energistics-uom' } };
+    },
+  });
+  const { tools } = await client.listTools();
+  const convert = tools.find((t) => t.name === 'ofp_convert');
+  assert.ok(convert, 'ofp_convert registers');
+  assert.equal(convert.annotations.readOnlyHint, true);
+  assert.equal(convert.annotations.destructiveHint, false);
+  assert.equal(convert.annotations.idempotentHint, true);
+  assert.equal(convert.inputSchema.additionalProperties, false);
+  assert.equal(convert._meta.pricing.amount, 0, 'a conversion is free');
+
+  const assumption = { kind: 'calorificValue', value: 10.5, unit: 'kW.h', perUnit: 'm3', basis: 'gross' };
+  const ok = await client.callTool({
+    name: 'ofp_convert',
+    arguments: { value: 1, fromUnit: 'm3', toUnit: 'kW.h', assumption, dictionary: 'energistics-uom@1.0' },
+  });
+  assert.notEqual(ok.isError, true);
+  assert.deepEqual(captured, { value: 1, fromUnit: 'm3', toUnit: 'kW.h', assumption, dictionary: 'energistics-uom@1.0' });
+
+  const unknown = await client.callTool({
+    name: 'ofp_convert',
+    arguments: { value: 1, fromUnit: 'm3', toUnit: 'kW.h', __unexpected_param__: 'xyzzy' },
+  });
+  assert.equal(unknown.isError, true, 'an unknown key is rejected');
+  const stringly = await client.callTool({
+    name: 'ofp_convert',
+    arguments: { value: '2500', fromUnit: 'kWh', toUnit: 'MW.h' },
+  });
+  assert.equal(stringly.isError, true, 'a string value is rejected before any request');
+});
+
+test('ofp_units forwards discovery filters and is a free, strict read', async () => {
+  let captured;
+  const client = await connected({
+    keriEnabled: () => false,
+    ofpUnits: async (args) => {
+      captured = args;
+      return { success: true, data: { quantityTypes: [] } };
+    },
+  });
+  const { tools } = await client.listTools();
+  const units = tools.find((t) => t.name === 'ofp_units');
+  assert.ok(units, 'ofp_units registers');
+  assert.equal(units.annotations.readOnlyHint, true);
+  assert.equal(units.annotations.idempotentHint, true);
+  assert.equal(units.inputSchema.additionalProperties, false);
+  assert.equal(units._meta.pricing.amount, 0, 'the dictionary is free');
+
+  const ok = await client.callTool({ name: 'ofp_units', arguments: { quantity: 'volume', detail: 'full', offset: 0 } });
+  assert.notEqual(ok.isError, true);
+  assert.equal(captured.quantity, 'volume');
+  assert.equal(captured.detail, 'full');
+  assert.equal(captured.offset, 0);
+  const bare = await client.callTool({ name: 'ofp_units', arguments: {} });
+  assert.notEqual(bare.isError, true, 'no arguments lists the quantity index');
+  const badDetail = await client.callTool({ name: 'ofp_units', arguments: { detail: 'everything' } });
+  assert.equal(badDetail.isError, true, 'detail is an enum');
+});
+
+test('a 422 conversion refusal is result data, not a tool error', async () => {
+  const detail = {
+    success: false,
+    error: 'assumption_required',
+    message: 'm3 to kW.h crosses dimensions; declare an assumption.',
+    detail: { kind: 'calorificValue', required: ['value', 'unit', 'perUnit', 'basis'] },
+  };
+  const client = await connected({
+    keriEnabled: () => false,
+    ofpConvert: async () => {
+      throw new SemanticApiError('dVeracity API error 422: assumption required', { status: 422, detail });
+    },
+  });
+  const res = await client.callTool({ name: 'ofp_convert', arguments: { value: 1, fromUnit: 'm3', toUnit: 'kW.h' } });
+  // Unlike compliance_evaluate there is no failed audit record: the refusal
+  // body is the answer the agent reads and acts on, so it is not isError.
+  assert.notEqual(res.isError, true);
+  assert.deepEqual(JSON.parse(textOf(res)), detail);
+});
+
+test('a 422 unresolved unit answers with candidates as data; other statuses stay errors', async () => {
+  const detail = {
+    success: false,
+    error: 'unresolved_unit',
+    message: 'No dictionary entry for unit "mwhh".',
+    detail: { candidates: ['MW.h'] },
+  };
+  const client = await connected({
+    keriEnabled: () => false,
+    ofpUnits: async () => {
+      throw new SemanticApiError('dVeracity API error 422: unresolved unit', { status: 422, detail });
+    },
+    ofpConvert: async () => {
+      throw new SemanticApiError('dVeracity API error 400: body.value is required', { status: 400, detail: { success: false } });
+    },
+  });
+  const refusal = await client.callTool({ name: 'ofp_units', arguments: { code: 'mwhh' } });
+  assert.notEqual(refusal.isError, true);
+  assert.deepEqual(JSON.parse(textOf(refusal)), detail);
+  const malformed = await client.callTool({ name: 'ofp_convert', arguments: { value: 1, fromUnit: 'm3', toUnit: 'kW.h' } });
+  assert.equal(malformed.isError, true, 'a non-422 failure is still a tool error');
 });

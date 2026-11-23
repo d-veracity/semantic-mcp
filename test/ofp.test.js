@@ -129,3 +129,74 @@ test('ofpMeta hits the provenance endpoint', async () => {
   await clientWith(rec).ofpMeta();
   assert.equal(rec.calls[0].url, 'https://api.test/api/v1/ofp/meta');
 });
+
+test('ofpConvert posts only the fields that were supplied', async () => {
+  const rec = recorder();
+  await clientWith(rec).ofpConvert({ value: 2500, fromUnit: 'kWh', toUnit: 'MW.h' });
+  assert.equal(rec.calls[0].url, 'https://api.test/api/v1/ofp/convert');
+  assert.equal(rec.calls[0].method, 'POST');
+  assert.deepEqual(rec.calls[0].body, { value: 2500, fromUnit: 'kWh', toUnit: 'MW.h' });
+});
+
+test('ofpConvert forwards an assumption and dictionary pin verbatim', async () => {
+  const rec = recorder();
+  const assumption = { kind: 'calorificValue', value: 10.5, unit: 'kW.h', perUnit: 'm3', basis: 'gross' };
+  await clientWith(rec).ofpConvert({
+    value: 1, fromUnit: 'm3', toUnit: 'kW.h', assumption, dictionary: 'energistics-uom@1.0',
+  });
+  assert.deepEqual(rec.calls[0].body, {
+    value: 1, fromUnit: 'm3', toUnit: 'kW.h', assumption, dictionary: 'energistics-uom@1.0',
+  });
+});
+
+test('a 422 conversion refusal keeps its status and body for the tool layer', async () => {
+  const rec = recorder(422, {
+    success: false,
+    error: 'assumption_required',
+    message: 'm3 to kW.h crosses dimensions; declare an assumption.',
+    detail: { kind: 'calorificValue' },
+  });
+  await assert.rejects(
+    () => clientWith(rec).ofpConvert({ value: 1, fromUnit: 'm3', toUnit: 'kW.h' }),
+    (err) => {
+      assert.ok(err instanceof SemanticApiError);
+      assert.equal(err.status, 422);
+      assert.equal(err.detail.error, 'assumption_required');
+      assert.deepEqual(err.detail.detail, { kind: 'calorificValue' });
+      return true;
+    }
+  );
+});
+
+test('ofpUnits builds the query only from supplied filters', async () => {
+  const rec = recorder();
+  const c = clientWith(rec);
+  await c.ofpUnits();
+  await c.ofpUnits({ code: 'gal[US]' });
+  await c.ofpUnits({ quantity: 'volume', detail: 'full', limit: 5, offset: 0 });
+  assert.equal(rec.calls[0].url, 'https://api.test/api/v1/ofp/units');
+  assert.equal(rec.calls[0].method, 'GET');
+  assert.equal(rec.calls[1].url, 'https://api.test/api/v1/ofp/units?code=gal%5BUS%5D');
+  // offset=0 is a meaningful first page and must survive.
+  assert.equal(
+    rec.calls[2].url,
+    'https://api.test/api/v1/ofp/units?quantity=volume&detail=full&limit=5&offset=0'
+  );
+});
+
+test('a 422 on an unresolved unit keeps its candidates for the tool layer', async () => {
+  const rec = recorder(422, {
+    success: false,
+    error: 'unresolved_unit',
+    message: 'No dictionary entry for unit "mwhh".',
+    detail: { candidates: ['MW.h'] },
+  });
+  await assert.rejects(
+    () => clientWith(rec).ofpUnits({ code: 'mwhh' }),
+    (err) => {
+      assert.equal(err.status, 422);
+      assert.deepEqual(err.detail.detail.candidates, ['MW.h']);
+      return true;
+    }
+  );
+});

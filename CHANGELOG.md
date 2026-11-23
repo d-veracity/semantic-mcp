@@ -5,6 +5,35 @@ wrapper over the dVeracity REST API and is also mounted by the backend at
 `https://api.dveracity.com/mcp`; a response-shape change is made in the backend
 and documented here because this package is where agents read the contract.
 
+## 0.9.0 — 2026-11-22
+
+### Added
+- `ofp_convert` (free): pass-through to `POST /api/v1/ofp/convert`. Answers the
+  execution contract's shape `{success, value, unit, provenance}` at the top
+  level, not the `withSource` envelope. A refused conversion (422:
+  `unresolved_unit`, `incompatible_dimension`, `assumption_required`,
+  `invalid_conversion_parameters`) is returned as normal tool result data —
+  the body is the answer, not a transport error. Cross-dimensional conversions
+  (volume→energy, volume→mass) require a declared assumption; the service does
+  not do CO2e. An optional `dictionary` pin (`[<dictionary>@]<version>`) is
+  honoured or refused, never silently ignored.
+- `ofp_units` (free): pass-through to `GET /api/v1/ofp/units`. Quantity-first
+  discovery: no arguments lists quantity types, `quantity` lists its units
+  (`detail=full` for conversion factors, `limit`/`offset` to page), `code`
+  resolves one symbol or alias. Unambiguous case/notation variants resolve;
+  unresolved codes answer 422 with candidates, also passed through as data.
+- Both tools use the existing `ofp:read` scope; no OAuth consent change. The
+  catalogue grows from 25 to 27 tools.
+
+### Changed
+- Tool card copy trimmed to keep `tools/list` under the 20 KB directory budget
+  with 27 tools (leads and caveats tightened across the catalogue; every
+  pinned guardrail fragment kept). Long-form units guidance lives in the
+  README's new "Units of measure" section.
+- `ofp_model_provenance` lead now describes the extension packs the snapshot
+  publishes (synced from the monorepo).
+- `credits_balance` removal promise reworded to 0.9.x; the tool still works.
+
 ## 0.8.3 — 2026-11-02
 
 ### Changed
