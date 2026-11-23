@@ -155,8 +155,9 @@ quantity-type index (each type's base unit and count — the response's
 units as a summary; `detail=full` adds conversion factors and is large, so
 prefer summary and page with `limit`/`offset` when filling a cache. `code`
 resolves one symbol or alias. Unambiguous case and notation variants resolve
-(`MWH` finds `MW.h`, recorded in `unitResolution`); a genuine choice refuses
-with candidates rather than guessing.
+(`MWH` finds `MW.h`); a genuine choice refuses with candidates rather than
+guessing. The `ofp_units` answer is the unit entry itself — how a unit
+resolved is recorded in `ofp_convert`'s `provenance.unitResolution`.
 
 **The conversion answer is a contract shape.** `ofp_convert` returns
 `{success, value, unit, provenance}` at the top level — deliberately not the
