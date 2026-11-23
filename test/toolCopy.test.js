@@ -2,7 +2,7 @@
  * Catalogue copy tests (v0.8.2 Item 2).
  *
  * Directory listings show the human title and the lead sentence, not the
- * snake_case tool name. This pins the copy for all 25 tools, the deprecated
+ * snake_case tool name. This pins the copy for all 27 tools, the deprecated
  * credits_balance wording, and the commerce-restricted surface: same titles
  * and leads, no price text, and no checkout tools.
  */
@@ -30,6 +30,8 @@ const TITLE_SNAPSHOT = {
   ofp_semantics: 'Open Footprint: semantic codes for mapping',
   ofp_semantic_code: 'Open Footprint: fields for a semantic code',
   ofp_model_provenance: 'Open Footprint: model version',
+  ofp_units: 'Open Footprint: unit dictionary',
+  ofp_convert: 'Open Footprint: convert units',
   ofp_validate: 'Validate data against Open Footprint',
   compliance_policies: 'Regulatory checks: list policies',
   compliance_policy: 'Regulatory checks: get policy',
