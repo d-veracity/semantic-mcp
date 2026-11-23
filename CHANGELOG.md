@@ -5,7 +5,39 @@ wrapper over the dVeracity REST API and is also mounted by the backend at
 `https://api.dveracity.com/mcp`; a response-shape change is made in the backend
 and documented here because this package is where agents read the contract.
 
-## 0.9.0 — 2026-11-22
+## 0.9.1 — 2026-11-23
+
+Documentation only. No tool, schema or response shape changed in this package;
+the behaviour described below is the backend's, and it is recorded here because
+this file and the README are where agents read the contract.
+
+### Changed
+- `ofp_validate`: `unit_coherence` **runs**. It was documented in the catalogue
+  table as `not run` / `not_implemented`, which stopped being true when dVE #605
+  deployed on 2026-11-23, so the table said the opposite of what the service
+  does. The check is the composite foreign key
+  `(Unit Of Measure ID, Physical Quantity Type ID)` that the OFP schema declares
+  on the parent Unit Of Measure and that no database constraint enforces. It
+  reports a unit that does not measure the declared quantity, a base unit of
+  another dimension, and — as a warning, not a violation — conversion parameters
+  that disagree with the published dictionary. The parameter comparison is made
+  on the converted value, never on the quadruple, because `(A,B,C,D)` and
+  `(kA,kB,kC,kD)` are the same conversion.
+
+  It is narrow, and the table now says how. A record that refers to a unit by a
+  deployment-local reference-data key (`…UnitOfMeasure:mrv01-h:…`) is reported
+  `unit_key_not_dereferenceable`, never coherent: resolving that key against the
+  record it names needs a data plane, the same wall `referential_integrity`
+  reports as `no_data_plane`. A record that states its own unit code and
+  quantity type — a `Unit Of Measure` record — is judged in full. Ten reasons
+  are published for the cases it cannot judge, and an unpublished quantity type
+  is silence, not permission.
+
+  Verified live on 2026-11-23 by the GHGP conformance suite's `UOM-COH-01`..`07`
+  against `api.dveracity.com`; `factor_provenance` and `materiality` remain the
+  two catalogue entries that report `not_implemented`.
+
+
 
 ### Added
 - `ofp_convert` (free): pass-through to `POST /api/v1/ofp/convert`. Answers the
